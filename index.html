@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiasco — a reading project on Stanisław Lem's last novel</title>
+<meta name="description" content="Essays, visualizations, and creative responses to Stanisław Lem's Fiasco (1986) — a first-contact mission where every step was reasonable on its own terms, and irreversible in combination.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1F3F4;
+    --ink:#1B242E;
+    --ink-soft:#5A6672;
+    --human:#2C5F8A;
+    --quintan:#7A2E2E;
+    --amber:#B98A1F;
+    --line:#C4CCD2;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--paper);color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;font-size:16px;line-height:1.55;
+  }
+  .sheet{max-width:760px;margin:0 auto;padding:56px 28px 72px}
+
+  header{border-top:6px solid var(--ink);padding-top:22px}
+  .doc-line{
+    display:flex;justify-content:space-between;align-items:baseline;
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.08em;
+    color:var(--ink-soft);text-transform:uppercase;margin-bottom:30px;flex-wrap:wrap;gap:6px;
+  }
+  h1{
+    font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;
+    font-size:clamp(52px,11vw,96px);line-height:.95;letter-spacing:-.01em;
+    text-transform:uppercase;
+  }
+  .subtitle{
+    margin-top:16px;max-width:560px;color:var(--ink-soft);font-size:16.5px;
+  }
+
+  /* signature: the signal-to-fire spine, laid horizontal */
+  .spine{
+    margin:34px 0 10px;height:4px;width:100%;
+    background:linear-gradient(to right,var(--human) 0%,var(--human) 34%,var(--amber) 58%,var(--quintan) 100%);
+  }
+  .spine-labels{
+    display:flex;justify-content:space-between;
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--ink-soft);margin-bottom:44px;
+  }
+
+  .lede{max-width:620px}
+  .lede p{margin-bottom:14px}
+  .lede em{font-style:italic}
+
+  h2{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:600;
+    letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);
+    border-top:1px solid var(--line);padding-top:14px;margin:46px 0 18px;
+  }
+
+  .card{
+    display:block;text-decoration:none;color:inherit;
+    border:2px solid var(--ink);background:#fff;
+    transition:transform .15s ease,box-shadow .15s ease;
+  }
+  .card:hover,.card:focus-visible{
+    transform:translate(-2px,-2px);
+    box-shadow:4px 4px 0 var(--ink);
+    outline:none;
+  }
+  .card:focus-visible{box-shadow:4px 4px 0 var(--human)}
+  .card-head{
+    display:flex;align-items:baseline;gap:12px;
+    padding:14px 18px;border-bottom:1px solid var(--line);
+  }
+  .card-num{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;
+    color:var(--human);letter-spacing:.08em;
+  }
+  .card-title{
+    font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;
+    font-size:22px;text-transform:uppercase;letter-spacing:.01em;
+  }
+  .card-body{padding:14px 18px 16px;color:var(--ink-soft);font-size:14.5px}
+  .card-go{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink);
+    padding:0 18px 16px;display:block;
+  }
+
+  .soon{
+    border:1px dashed var(--line);padding:14px 18px 16px;color:var(--ink-soft);
+    font-size:14.5px;margin-top:14px;background:transparent;
+  }
+  .soon .tag{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;
+    letter-spacing:.18em;text-transform:uppercase;display:block;margin-bottom:6px;
+  }
+
+  footer{
+    margin-top:64px;border-top:1px solid var(--line);padding-top:16px;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.05em;
+    color:var(--ink-soft);line-height:1.7;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .card{transition:none}
+    .card:hover,.card:focus-visible{transform:none;box-shadow:4px 4px 0 var(--ink)}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header>
+    <div class="doc-line">
+      <span>A reading project</span>
+      <span>Stanisław Lem · 1986</span>
+    </div>
+    <h1>Fiasco</h1>
+    <p class="subtitle">Essays, visualizations, and creative responses to Lem's last novel — a first-contact mission in which each step was reasonable on its own terms, and irreversible in combination.</p>
+    <div class="spine" role="presentation"></div>
+    <div class="spine-labels" aria-hidden="true"><span>Signal</span><span>Fire</span></div>
+  </header>
+
+  <div class="lede">
+    <p>In <em>Fiasco</em>, the spacecraft <em>Hermes</em> crosses interstellar space to greet the first alien civilization humanity has ever found — and everything the crew does to open a conversation makes war more likely. This site examines how that happens, one decision at a time, and why a novel from 1986 keeps describing the present.</p>
+  </div>
+
+  <h2>Start here</h2>
+  <a class="card" href="timeline.html">
+    <div class="card-head">
+      <span class="card-num">№ 01</span>
+      <span class="card-title">The Escalation Timeline</span>
+    </div>
+    <div class="card-body">Every contact attempt of the mission to Quinta, human and Quintan, laid out on a single spine running from signal to fire — with illustrations and expandable accounts of each step. No prior knowledge of the novel needed.</div>
+    <span class="card-go">Open the timeline →</span>
+  </a>
+
+  <a class="card" href="council.html" style="margin-top:14px">
+    <div class="card-head">
+      <span class="card-num">№ 02</span>
+      <span class="card-title">You Are the Council</span>
+    </div>
+    <div class="card-body">The pivotal decision of the mission, opened to every reader: the crew's votes are on record, the count is still open, and yours joins it — a live tally shared by everyone who visits.</div>
+    <span class="card-go">Take your seat →</span>
+  </a>
+
+  <footer>
+    Original essays, visualizations, and summaries on this site are the author's own analytical and transformative work.<br>
+    <em>Fiasco</em> © the Stanisław Lem Estate; English translation by Michael Kandel © Harcourt.
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+  ============================================================================
+  YOU ARE THE COUNCIL — interactive vote page for the Fiasco reading project
+  ============================================================================
+  Purpose:
+    Presents the council scene from Chapter XI of Stanisław Lem's "Fiasco"
+    (context → the proposal → the debate → Arago's objection) and then lets
+    the visitor cast a live vote. The fictional crew's nine votes (6 For,
+    3 Against; the chair does not vote) are permanent seed values; every
+    visitor's click adds one vote to a shared tally kept by a Cloudflare
+    Worker with KV storage (free tier, no inactivity pause).
+
+  How to use:
+    The vote backend is live (Cloudflare Worker "fiasco-votes" + KV binding
+    VOTES). Simply upload this file to the site repository next to
+    index.html and link it from the landing page.
+
+  Behaviour notes:
+    - Totals are hidden until the visitor votes (avoids herding).
+    - One vote per open page; closing or reloading allows a new vote.
+    - If the worker is not yet configured or unreachable, the page still works:
+      voting falls back to a local-only count with a small notice.
+  ============================================================================
+-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>You Are the Council — Fiasco</title>
+<meta name="description" content="Join the vote of the Hermes council on shattering Quinta's moon — the pivotal decision of Stanisław Lem's Fiasco, opened to every reader.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ---- Design tokens shared with index.html (dossier: paper & ink) ---- */
+  :root{
+    --paper:#F1F3F4;   /* page background */
+    --ink:#1B242E;     /* primary text and hard borders */
+    --ink-soft:#5A6672;/* secondary text */
+    --human:#2C5F8A;   /* human-side accent (signal blue) */
+    --quintan:#7A2E2E; /* quintan / destructive accent (fire red) */
+    --amber:#B98A1F;   /* transitional accent */
+    --line:#C4CCD2;    /* hairline rules */
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--paper);color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;font-size:16px;line-height:1.55;
+  }
+  /* Central column, same measure as the landing page */
+  .sheet{max-width:760px;margin:0 auto;padding:56px 28px 72px}
+
+  /* ---- Header block ---- */
+  header{border-top:6px solid var(--ink);padding-top:22px}
+  .doc-line{
+    display:flex;justify-content:space-between;align-items:baseline;
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.08em;
+    color:var(--ink-soft);text-transform:uppercase;margin-bottom:30px;flex-wrap:wrap;gap:6px;
+  }
+  .doc-line a{color:inherit;text-decoration:none;border-bottom:1px solid var(--line)}
+  .doc-line a:hover,.doc-line a:focus-visible{color:var(--ink);border-color:var(--ink);outline:none}
+  h1{
+    font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;
+    font-size:clamp(40px,9vw,76px);line-height:.98;letter-spacing:-.01em;
+    text-transform:uppercase;
+  }
+  .subtitle{margin-top:16px;max-width:600px;color:var(--ink-soft);font-size:16.5px}
+
+  /* Signature spine: signal → fire gradient, carried over from the landing page */
+  .spine{
+    margin:34px 0 10px;height:4px;width:100%;
+    background:linear-gradient(to right,var(--human) 0%,var(--human) 34%,var(--amber) 58%,var(--quintan) 100%);
+  }
+  .spine-labels{
+    display:flex;justify-content:space-between;
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--ink-soft);margin-bottom:44px;
+  }
+
+  /* ---- Section headings (mono eyebrows over a hairline) ---- */
+  h2{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:600;
+    letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);
+    border-top:1px solid var(--line);padding-top:14px;margin:46px 0 18px;
+  }
+  .prose{max-width:620px}
+  .prose p{margin-bottom:14px}
+  .prose em{font-style:italic}
+
+  /* ---- Debate: alternating speaker entries ---- */
+  .voice{
+    border-left:3px solid var(--line);padding:2px 0 2px 16px;margin:0 0 18px;
+    max-width:620px;
+  }
+  .voice.for{border-left-color:var(--quintan)}      /* voices pushing toward force */
+  .voice.against{border-left-color:var(--human)}    /* voices urging restraint */
+  .voice .who{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;
+    letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:4px;
+  }
+  .voice.for .who{color:var(--quintan)}
+  .voice.against .who{color:var(--human)}
+  .voice p{color:var(--ink);font-size:15.5px}
+
+  /* Arago's objection: the one framed, full-weight block on the page */
+  .objection{
+    border:2px solid var(--ink);background:#fff;padding:20px 22px;
+    margin:26px 0 8px;max-width:620px;
+  }
+  .objection .who{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--human);
+    display:block;margin-bottom:8px;
+  }
+  .objection p{margin-bottom:10px}
+  .objection p:last-child{margin-bottom:0}
+
+  /* ---- The vote panel ---- */
+  .vote-panel{
+    border:2px solid var(--ink);background:#fff;margin-top:8px;
+  }
+  .vote-head{
+    padding:16px 20px;border-bottom:1px solid var(--line);
+  }
+  .vote-head .tag{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);
+    display:block;margin-bottom:6px;
+  }
+  .vote-question{
+    font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;
+    font-size:22px;text-transform:uppercase;letter-spacing:.01em;line-height:1.2;
+  }
+  .vote-body{padding:18px 20px 22px}
+  .vote-note{color:var(--ink-soft);font-size:14px;margin-bottom:16px}
+
+  /* Two vote buttons, side by side; stack on narrow screens */
+  .vote-buttons{display:flex;gap:14px;flex-wrap:wrap}
+  .vote-btn{
+    flex:1 1 200px;cursor:pointer;background:transparent;
+    border:2px solid var(--ink);padding:14px 16px;text-align:left;
+    font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;
+    font-size:19px;text-transform:uppercase;letter-spacing:.02em;color:var(--ink);
+    transition:transform .15s ease,box-shadow .15s ease;
+  }
+  .vote-btn small{
+    display:block;font-family:'IBM Plex Sans',sans-serif;font-weight:400;
+    font-size:13px;text-transform:none;letter-spacing:0;color:var(--ink-soft);
+    margin-top:4px;
+  }
+  .vote-btn:hover,.vote-btn:focus-visible{
+    transform:translate(-2px,-2px);outline:none;
+  }
+  .vote-btn.for:hover,.vote-btn.for:focus-visible{box-shadow:4px 4px 0 var(--quintan)}
+  .vote-btn.against:hover,.vote-btn.against:focus-visible{box-shadow:4px 4px 0 var(--human)}
+  .vote-btn:disabled{opacity:.45;cursor:default;transform:none;box-shadow:none}
+  .vote-cast-note{
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:.04em;
+    color:var(--ink-soft);margin-top:12px;
+  }
+
+  /* ---- Results (hidden until the visitor has voted) ---- */
+  .results{display:none;margin-top:22px}
+  .results.visible{display:block}
+  .tally-row{margin-bottom:14px}
+  .tally-label{
+    display:flex;justify-content:space-between;align-items:baseline;
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:600;
+    letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;
+  }
+  .tally-label .count{font-size:15px}
+  .tally-row.for .tally-label{color:var(--quintan)}
+  .tally-row.against .tally-label{color:var(--human)}
+  .bar{height:10px;background:var(--paper);border:1px solid var(--line)}
+  .bar-fill{height:100%;width:0%;transition:width .6s ease}
+  .tally-row.for .bar-fill{background:var(--quintan)}
+  .tally-row.against .bar-fill{background:var(--human)}
+  .results-note{
+    color:var(--ink-soft);font-size:13.5px;margin-top:12px;
+    font-family:'IBM Plex Mono',monospace;letter-spacing:.02em;
+  }
+  .offline-note{color:var(--amber)}
+
+  /* What-happened reveal, shown together with the results */
+  .aftermath{display:none;margin-top:34px}
+  .aftermath.visible{display:block}
+
+  footer{
+    margin-top:64px;border-top:1px solid var(--line);padding-top:16px;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.05em;
+    color:var(--ink-soft);line-height:1.7;
+  }
+  footer a{color:inherit}
+
+  @media (prefers-reduced-motion: reduce){
+    .vote-btn{transition:none}
+    .vote-btn:hover,.vote-btn:focus-visible{transform:none}
+    .bar-fill{transition:none}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header>
+    <div class="doc-line">
+      <span><a href="index.html">← Fiasco, a reading project</a></span>
+      <span>№ 02 · Interactive</span>
+    </div>
+    <h1>You Are<br>the Council</h1>
+    <p class="subtitle"><em>Hermes</em> crew met to vote.</p>
+    <div class="spine" role="presentation"></div>
+    <div class="spine-labels" aria-hidden="true"><span>Signal</span><span>Fire</span></div>
+  </header>
+
+  <!-- ============ 1. CONTEXT ============ -->
+  <h2>The situation</h2>
+  <div class="prose">
+    <p>The <em>Hermes</em> has crossed interstellar space to greet the first alien civilization humanity has found, and every attempt at conversation has failed or turned deadly. Three weeks of laser greetings from orbit met total silence. An unmanned, unarmed emissary craft was chased down by interceptors and destroyed itself rather than be captured — the mission's first deaths, on the other side. Then fifty missiles materialized inside the ship's own defensive perimeter without warning; the ship survived only through an evasive maneuver so violent it knocked the entire crew unconscious. Soon after, a cloud of corrosive agents began quietly eating the hull.</p>
+    <p>The planet below, Quinta, says nothing. Its cities show no lights. Its radio bands emit engineered noise on every wavelength. The crew's best theory is bleak: a civilization locked in a war so old that its weapons have moved into orbit and slipped out of anyone's control.</p>
+    <p>The council convenes. Ten people around one table: the captain in the chair, two pilots, five scientists, two physicians — and among them a Dominican monk, aboard as an observer of conscience.</p>
+  </div>
+
+  <!-- ============ 2. THE PROPOSAL ============ -->
+  <h2>The proposal</h2>
+  <div class="prose">
+    <p>The first pilot, Harrach, puts a plan on the table: <strong>cavitation of the moon</strong>. Precision warheads would tunnel into the core of Quinta's uninhabited moon and split it — carefully, so that every fragment stays in its existing orbit. A demonstration visible from the whole planet, calculated to harm no one. First a warning would be broadcast: answer our signals, or the moon goes. The machine intelligence DEUS has run the numbers and confirms the fragments will hold their path.</p>
+  </div>
+
+  <!-- ============ 5. THE VOTE ============ -->
+  <h2>The vote</h2>
+  <div class="vote-panel">
+    <div class="vote-head">
+      <span class="tag">Council in session · count open</span>
+      <div class="vote-question">Shatter Quinta's moon as a warning?</div>
+    </div>
+    <div class="vote-body">
+      <p class="vote-note">Nine crew votes are already in the record. Cast yours — the count updates for every reader who follows you. Totals are shown after you vote.</p>
+
+      <!-- Vote buttons: each click writes one row to the shared database -->
+      <div class="vote-buttons">
+        <button class="vote-btn for" id="btnFor" type="button">
+          For
+          <small>Break the moon. Force an answer.</small>
+        </button>
+        <button class="vote-btn against" id="btnAgainst" type="button">
+          Against
+          <small>No demonstrations. Not this.</small>
+        </button>
+      </div>
+      <p class="vote-cast-note" id="voteCastNote" hidden></p>
+      <div class="results" id="results" aria-live="polite">
+        <div class="tally-row for">
+          <div class="tally-label"><span>For</span><span class="count" id="countFor">—</span></div>
+          <div class="bar"><div class="bar-fill" id="barFor"></div></div>
+        </div>
+        <div class="tally-row against">
+          <div class="tally-label"><span>Against</span><span class="count" id="countAgainst">—</span></div>
+          <div class="bar"><div class="bar-fill" id="barAgainst"></div></div>
+        </div>
+        <p class="results-note" id="resultsNote"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 6. AFTERMATH (revealed with the results) ============ -->
+  <div class="aftermath" id="aftermath">
+    <h2>What the council chose — and what followed</h2>
+    <div class="prose">
+      <p>In the novel, the motion carries six to nothing. No one votes against; three stay silent; Arago objects and is not counted. The warning is broadcast. No answer comes.</p>
+      <p>Eighteen warheads fly. As they approach, Quinta launches rockets of its own that intercept three of them on the planet-facing side — and the surgical cavitation goes eccentric. Roughly a hundred trillion tons of lunar rock, meant to stay in orbit forever, fall instead onto the planet the demonstration was supposed to spare.</p>
+      <p>Step 11 on <a href="timeline.html">the escalation timeline</a> tells what happened next.</p>
+    </div>
+  </div>
+
+  <footer>
+    Original essays, visualizations, and summaries on this site are the author's own analytical and transformative work.<br>
+    <em>Fiasco</em> © the Stanisław Lem Estate; English translation by Michael Kandel © Harcourt.
+  </footer>
+
+</div>
+
+<!-- Vote client: plain JavaScript talking to the Cloudflare Worker API -->
+<script>
+/* ===========================================================================
+   CONFIG — the deployed Cloudflare Worker that keeps the shared vote counts.
+   (Worker source: worker.js in this repository's records; KV binding VOTES.)
+   =========================================================================== */
+const WORKER_URL = "https://fiasco-votes.halil-ozgur-aslan2016.workers.dev";
+
+/* Permanent seed votes: the fictional crew's recorded hands */
+const SEED_FOR     = 6;
+const SEED_AGAINST = 3;
+
+/* ---- Element references, looked up once ---- */
+const btnFor         = document.getElementById("btnFor");        // "For" vote button
+const btnAgainst     = document.getElementById("btnAgainst");    // "Against" vote button
+const resultsBox     = document.getElementById("results");       // results container
+const aftermathBox   = document.getElementById("aftermath");     // aftermath section
+const countForEl     = document.getElementById("countFor");      // "For" number label
+const countAgainstEl = document.getElementById("countAgainst");  // "Against" number label
+const barForEl       = document.getElementById("barFor");        // "For" bar fill
+const barAgainstEl   = document.getElementById("barAgainst");    // "Against" bar fill
+const resultsNote    = document.getElementById("resultsNote");   // note under the bars
+const voteCastNote   = document.getElementById("voteCastNote");  // "you voted" note
+
+/* True once CONFIG has a real URL pasted in (not the placeholder) */
+const workerConfigured = !WORKER_URL.includes("PASTE_YOUR");
+
+/* Local fallback tallies, used when the vote API is unreachable */
+let localFor = 0;       // visitor votes counted locally this session ("for")
+let localAgainst = 0;   // visitor votes counted locally this session ("against")
+
+/* One-vote lock for the active page only: true after this page has voted.
+   Held in memory, never stored — closing or reloading the page clears it,
+   so a returning reader may vote again. */
+let hasVotedThisSession = false;
+
+/* ---- Record one vote, then reveal the running totals ---- */
+async function castVote(choice){
+  // Refuse a second vote while this page stays open
+  if (hasVotedThisSession) return;
+  hasVotedThisSession = true;
+
+  // Disable both buttons while the vote is being written
+  btnFor.disabled = true;
+  btnAgainst.disabled = true;
+
+  let online = false;        // whether the shared counter accepted this vote
+  let counts = null;         // {for, against} visitor totals from the API
+
+  // Try to write the vote to the shared counter; the reply carries the totals
+  if (workerConfigured){
+    try{
+      const response = await fetch(WORKER_URL + "/vote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ choice }),
+      });
+      if (response.ok){
+        counts = await response.json();
+        online = true;
+      }
+    }catch(_){ /* network failure — fall through to local counting */ }
+  }
+
+  // Fall back to a local-only count when the API is unavailable
+  if (!online){
+    if (choice === "for") localFor++; else localAgainst++;
+    counts = { for: localFor, against: localAgainst };
+  }
+
+  showTotals(counts, online);
+  lockVoteButtons(choice);
+}
+
+/* ---- Permanently disable the vote buttons and mark which one was chosen ---- */
+function lockVoteButtons(choice){
+  btnFor.disabled = true;
+  btnAgainst.disabled = true;
+  const chosenBtn = choice === "for" ? btnFor : btnAgainst;    // the pressed button
+  const chosenLabel = choice === "for" ? "For" : "Against";    // its display label
+  chosenBtn.querySelector("small").textContent = "Your vote — cast, and recorded.";
+  voteCastNote.textContent = `You voted ${chosenLabel}.`;
+  voteCastNote.hidden = false;
+}
+
+/* ---- Render bars + numbers from visitor counts plus the crew seed ---- */
+function showTotals(counts, online){
+  // Totals shown = permanent crew seed + accumulated visitor votes
+  const totalFor     = SEED_FOR + counts.for;
+  const totalAgainst = SEED_AGAINST + counts.against;
+  const totalAll     = totalFor + totalAgainst;
+
+  // Render the numbers and proportional bars
+  countForEl.textContent     = totalFor;
+  countAgainstEl.textContent = totalAgainst;
+  barForEl.style.width     = (100 * totalFor / totalAll).toFixed(1) + "%";
+  barAgainstEl.style.width = (100 * totalAgainst / totalAll).toFixed(1) + "%";
+
+  // Note under the bars: only shown when the live count is unavailable.
+  // Overwritten (not appended) on every vote, so at most one note is ever
+  // visible at a time, and it never persists once a page session ends.
+  resultsNote.textContent = online
+    ? ""
+    : "Live count unavailable — your vote was counted on this page only.";
+  resultsNote.classList.toggle("offline-note", !online);
+
+  // Reveal the results and the aftermath (option B: shown only after voting)
+  resultsBox.classList.add("visible");
+  aftermathBox.classList.add("visible");
+}
+
+/* ---- Wire the buttons ---- */
+btnFor.addEventListener("click", () => castVote("for"));
+btnAgainst.addEventListener("click", () => castVote("against"));
+</script>
+</body>
+</html>
