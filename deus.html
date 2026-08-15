@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The DEUS Log — Fiasco reading project</title>
+<meta name="description" content="The mission to Quinta as recorded by the machine that flew it: fourteen telemetry entries reconstructed from Stanisław Lem's Fiasco (1986). Click an entry header; the record types itself out.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ==========================================================================
+     THE DEUS LOG — terminal edition, v3
+     Design: black CRT screen, matrix-green phosphor type. The page opens
+     showing only the fourteen entry headers. Clicking a header opens the
+     entry and the record types itself out character by character with a
+     synthesized teletype click. All log text — TACTICAL and
+     PSYCHOMONITORING alike — prints in the same green with the same sound.
+     Log text is hard-wrapped with aligned label columns (mainframe layout),
+     preserved exactly via white-space:pre.
+     ========================================================================== */
+
+  :root{
+    --screen:#020503;       /* CRT black, faintly green */
+    --phos:#33FF66;         /* phosphor green: all log text */
+    --phos-dim:#1E8C46;     /* dimmed green: chrome and secondary labels only */
+    --phos-faint:#0F4A26;   /* faintest green: rules, idle borders */
+    --glow:0 0 6px rgba(51,255,102,.35);  /* text glow used sparingly */
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--screen);color:var(--phos);
+    font-family:'IBM Plex Mono',monospace;font-size:14px;line-height:1.6;
+  }
+  /* faint CRT scanlines across the whole screen */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:5;
+    background:repeating-linear-gradient(
+      to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px,
+      rgba(0,0,0,.18) 3px, rgba(0,0,0,0) 4px);
+  }
+  .sheet{max-width:900px;margin:0 auto;padding:64px 24px 80px}
+  a{color:var(--phos)}
+
+  /* ---- header ---- */
+  .doc-line{
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;
+    font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--phos-dim);border-bottom:1px solid var(--phos-faint);
+    padding-bottom:10px;margin-bottom:26px;
+  }
+  h1{
+    font-size:clamp(26px,5.5vw,44px);font-weight:600;letter-spacing:.04em;
+    text-transform:uppercase;text-shadow:var(--glow);
+  }
+  .subtitle{margin-top:14px;max-width:640px;color:var(--phos-dim);font-size:13px}
+  .subtitle em{font-style:italic}
+  .backlink{
+    display:inline-block;margin-top:16px;font-size:11px;font-weight:600;
+    letter-spacing:.14em;text-transform:uppercase;text-decoration:none;
+    border:1px solid var(--phos-faint);padding:6px 12px;
+  }
+  .backlink:hover,.backlink:focus-visible{border-color:var(--phos);outline:none;text-shadow:var(--glow)}
+
+  /* ---- fixed sound-mode button (top-right corner) ---- */
+  .snd{
+    position:fixed;top:10px;right:12px;z-index:10;
+    font-family:inherit;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    background:#000;border:1px solid var(--phos-faint);color:var(--phos-dim);
+    padding:5px 11px;cursor:pointer;white-space:nowrap;
+  }
+  .snd:hover,.snd:focus-visible{border-color:var(--phos);color:var(--phos);outline:none}
+
+  /* ---- the log list ---- */
+  .log{margin-top:40px;border-top:1px solid var(--phos-faint)}
+
+  /* entry header: the only thing visible until clicked */
+  .e-head{
+    width:100%;display:block;text-align:left;cursor:pointer;
+    background:none;border:none;border-bottom:1px solid var(--phos-faint);
+    font-family:inherit;color:var(--phos);
+    padding:16px 8px;
+  }
+  .e-head:hover,.e-head:focus-visible{
+    background:rgba(51,255,102,.05);outline:none;text-shadow:var(--glow);
+  }
+  .e-head .h-line{
+    display:block;white-space:pre;overflow-x:auto;
+    font-size:12.5px;font-weight:600;letter-spacing:.05em;
+  }
+  .e-head .h-ref{
+    display:block;margin-top:3px;font-size:12.5px;color:var(--phos-dim);letter-spacing:.05em;
+  }
+  /* open/closed indicator drawn as terminal prompt marks */
+  .e-head .h-line::before{content:"> ";color:var(--phos-dim)}
+  .entry.open .e-head .h-line::before{content:"v ";color:var(--phos)}
+
+  /* entry body: hidden until opened, then typed into */
+  .e-body{display:none;padding:6px 8px 26px;border-bottom:1px solid var(--phos-faint)}
+  .entry.open .e-body{display:block}
+  /* block titles: both ledgers carry the same green */
+  .b-title{
+    font-size:12.5px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;
+    margin:16px 0 4px;color:var(--phos);
+  }
+  /* log text: pre-formatted, hard-wrapped with aligned columns.
+     white-space:pre preserves the alignment exactly; on narrow screens
+     the block scrolls horizontally instead of re-wrapping. */
+  pre{
+    font-family:inherit;font-size:12.5px;line-height:1.7;
+    white-space:pre;overflow-x:auto;color:var(--phos);
+  }
+
+  /* blinking block cursor appended to the line being typed */
+  .cursor{
+    display:inline-block;width:.62em;height:1.05em;vertical-align:text-bottom;
+    background:var(--phos);animation:blink 1s steps(1) infinite;
+  }
+  @keyframes blink{50%{opacity:0}}
+
+  footer{
+    margin-top:56px;border-top:1px solid var(--phos-faint);padding-top:16px;
+    font-size:11px;letter-spacing:.05em;color:var(--phos-dim);line-height:1.8;
+  }
+
+  @media (max-width:600px){
+    .sheet{padding:48px 12px 60px}
+    pre{font-size:11px}
+  }
+
+  /* reduced motion: no blinking cursor (typing itself is handled in JS:
+     text appears instantly when this preference is set) */
+  @media (prefers-reduced-motion: reduce){
+    .cursor{animation:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- fixed sound-mode toggle: cycles Ping / Tick / Clank / Off -->
+<button class="snd" id="soundToggle">Sound: Ping</button>
+
+<div class="sheet">
+
+  <header>
+    <div class="doc-line">
+      <span>Mission record · Hermes / DEUS-1</span>
+      <span>Entries 01–14</span>
+    </div>
+    <h1>The DEUS Log</h1>
+    <p class="subtitle">Fourteen telemetry entries reconstructed from Stanisław Lem's <em>Fiasco</em> (1986) — the first-contact mission to Quinta as recorded by the shipboard computer that flew it, advised on it, and watched the crew who commanded it. Select an entry to read it.</p>
+    <a class="backlink" href="index.html">← Back to the project</a>
+  </header>
+
+  <div class="log" id="log">
+
+    <!-- Each entry: a clickable header, and a body whose text blocks are
+         typed out on first opening. Full text lives in the pre elements;
+         the script lifts it out at load and types it back in. -->
+
+    <article class="entry" data-p="">
+      <button class="e-head" aria-expanded="false">
+        <span class="h-line">ENTRY 01 · MISSION CLOCK T+0000:00                 HERMES / DEUS-1</span>
+        <span class="h-ref">REF: SYSTEM ENTRY, ZETA HARPYIAE</span>
+      </button>
+      <div class="e-body">
+        <div class="b-title">Tactical</div>
+        <pre>  SITUATION:    Deceleration complete. Vessel positioned in the umbra
+                of the outermost gas giant. Emission signature below
+                the estimated detection threshold of Quintan sensor
+                bands. Concealment: effective.
+  OBSERVATION:  Quinta girdled by an ice ring, mass est. 3-4 x 10^12 t,
+                orbitally unstable. Ring absent from all pre-departure
+                astrometric data. Origin undetermined.
+  HYPOTHESES:   H-A RING: NATURAL CAPTURE          p=0.22
+                H-A RING: PLANETARY ENGINEERING    p=0.41
+                H-A RING: WEAPON EFFECT            p=0.19
+                H-A RING: INSUFFICIENT DATA        p=0.18
+  ADVISORY:     Maintain concealment. Continue passive survey.</pre>
+        <div class="b-title">Psychomonitoring</div>
+        <pre>  ALL SUBJECTS: Parameters within simulated norms. Sleep architecture
+                nominal across crew. No action.</pre>
+      </div>
+    </article>
+
+    <article class="entry" data-p="">
+      <button class="e-head" aria-expanded="false">
+        <span class="h-line">ENTRY 02 · MISSION CLOCK T+0038:16                 HERMES / DEUS-1</span>
+        <span class="h-ref">REF: RADIO SURVEY, QUINTA</span>
+      </button>
+      <div class="e-body">
+        <div class="b-title">Tactical</div>
+        <pre>  SITUATION:    All radio bands saturated by emissions of aggregate
+                power in the gigawatt range. Signal content: no
+                structure recoverable by any decomposition applied.
+  ANALYSIS:     Emission sources are multiple and mutually opposed.
+                Transmitters jam and phase-cancel one another.
+                Product is not chaos but the sum of directed
+                interference.
+  HYPOTHESES:   H-B NOISE: CONCEALMENT OF TRAFFIC   p=0.34
+                H-B NOISE: DEFENSIVE JAMMING        p=0.33
+                H-B NOISE: INTERNAL CONFLICT        p=0.33
+                Discrimination between hypotheses: not achievable
+                from available data.
+  ADVISORY:     Conventional radio contact unavailable. Alternative
+                channels required.</pre>
+        <div class="b-title">Psychomonitoring</div>
+        <pre>  ALL SUBJECTS: Within tolerance. No action.</pre>
+      </div>
+    </article>
+
+    <article class="entry" data-p="0.55">
+      <button class="e-head" aria-expanded="false">
+        <span class="h-line">ENTRY 03 · MISSION CLOCK T+0112:40                 HERMES / DEUS-1</span>
+        <span class="h-ref">REF: RECOVERY OF DERELICT OBJECTS</span>
+      </button>
+      <div class="e-body">
+        <div class="b-title">Tactical</div>
+        <pre>  SITUATION:    Two Quintan artifacts secured. Object 1: satellite,
+                approx. 200 t, armored, age est. one century. Object 2:
+                radar-absorbent vehicle, approx. 5 t, hull breach of
+                thermal origin, damage age: recent.
+  ANALYSIS:     Structural chemistry of both objects: silico-amino
+                compounds. Classification: technobiology. Design
+                features indicate iterative descent with modification
+                between weapon generations. Process designation
+                adopted: necroevolution.
+  INFERENCE:    Recent combat damage on Object 2 establishes armed
+                conflict in progress within the system.
+  HYPOTHESES:   H-1 HOSTILE ENVIRONMENT            p=0.55
+                    Referent of hostility: undetermined.
+  ADVISORY:     Reconnaissance value of further wreckage: declining.</pre>
+        <div class="b-title">Psychomonitoring</div>
+        <pre>  ALL SUBJECTS: Within tolerance. No action.</pre>
+      </div>
+    </article>
+
+    <article class="entry" data-p="0.55">
+      <button class="e-head" aria-expanded="false">
+        <span class="h-line">ENTRY 04 · MISSION CLOCK T+0198:05                 HERMES / DEUS-1</span>
+        <span class="h-ref">REF: RECONNAISSANCE, QUINTAN MOON</span>
+      </button>
+      <div class="e-body">
+        <div class="b-title">Tactical</div>
+        <pre>  SITUATION:    Vessel disguised as cometary body within ablative foam
+                cocoon. Landing executed on the moon. Observation
+                target: mobile thermonuclear plasma concentration
+                confined by artificial magnetic field, transiting
+                between craters.
+  RESULT:       Subsurface energy installation located. Condition:
+                abandoned. Abandonment mode: rapid, with deliberate
+                sabotage of critical assemblies.
+  ASSESSMENT:   Study of inactive installations yields no channel of
+                contact. Commander's determination: direct request for
+                dialogue to be prepared.
+  ADVISORY:     Concur. Passive study exhausted.</pre>
+        <div class="b-title">Psychomonitoring</div>
+        <pre>  ALL SUBJECTS: Within tolerance. No action.</pre>
+      </div>
+    </article>
+
+    <article class="entry" data-p="0.55">
+      <button class="e-head" aria-expanded="false">
+        <span class="h-line">ENTRY 05 · MISSION CLOCK T+0231:57                 HERMES / DEUS-1</span>
+        <span class="h-ref">REF: PROBE PATROL, QUINTAN MOON</span>
+      </button>
+      <div class="e-body">
+        <div class="b-title">Tactical</div>
+        <pre>  SITUATION:    Five reconnaissance probes dispatched.
+  RESULT:       Probes 1, 2: contact lost at periselenium. Cause
+                unrecorded. Probes 3, 4, 5: engaged by small
+                interceptor craft; evasion executed within self-
+                generated sodium fireball; terminal disposition by
+                mutual head-on collision per capture-denial protocol.
+                Material recoverable by opposing force: none.
+  INFERENCE:    Unescorted objects approaching the surface are engaged
+                without interrogation. Delivery of greeting payloads
+                by this route: probability of arrival approx. 0.
+  ADVISORY:     Discontinue surface delivery attempts pending
+                alternative channel.</pre>
+        <div class="b-title">Psychomonitoring</div>
+        <pre>  ALL SUBJECTS: Within tolerance. No action.</pre>
+      </div>
+    </article>
+
+    <article class="entry" data-p="0.58">
+      <button class="e-head" aria-expanded="false">
+        <span class="h-line">ENTRY 06 · MISSION CLOCK T+0290:33                 HERMES / DEUS-1</span>
+        <span class="h-ref">REF: LASER TRANSMISSION PROGRAM, ORBITER AMBASSADOR</span>
+      </button>
+      <div class="e-body">
+        <div class="b-title">Tactical</div>
+        <pre>  SITUATION:    Orbiter Ambassador deployed. Transmission content:
+                greeting sequences, logic primers, reply instructions.
+                Duration: 21 days continuous. Coverage: all feasible
+                modulations and wavelengths.
+  RESULT:       Replies received: 0.
+  OBSERVATION:  Visual survey concurrent with transmission. Urban-
+                scale structures: no night illumination. Transport
+                networks: no detected movement. Vegetation-analog
+                regions: engineered radiation-absorbing structures.
+                Surface presents the configuration of an intentionally
+                inactive world.
+  HYPOTHESES:   H-1 HOSTILE INTENT                 p=0.58
+                    Revision basis: sustained non-response under
+                    saturation transmission.
+  ADVISORY:     Direct emissary landing is the remaining untested
+                channel.</pre>
+        <div class="b-title">Psychomonitoring</div>
+        <pre>  SUBJECT TEMPE: Query to medical officer regarding surveillance
+                 protocol logged. Response per standing procedure.
+                 Within tolerance. No action.
+  ALL OTHERS:    Within tolerance. No action.</pre>
+      </div>
+    </article>
+
+    <article class="entry" data-p="0.64">
+      <button class="e-head" aria-expanded="false">
+        <span class="h-line">ENTRY 07 · MISSION CLOCK T+0355:19                 HERMES / DEUS-1</span>
+        <span class="h-ref">REF: EMISSARY LANDER GABRIEL</span>
+      </button>
+      <div class="e-body">
+        <div class="b-title">Tactical</div>
+        <pre>  SITUATION:    Landing of unmanned, unarmed emissary announced by
+                transmission 48 h in advance. Destination: Heparia.
+  RESULT:       Lander displaced from announced trajectory by external
+                field action. Four interceptor craft converged on
+                optimal capture geometry. Lander onboard computer
+                executed capture-denial: teratron drive shorted;
+                sidereal implosion; interceptors absorbed.
+  ASSESSMENT:   First destruction of Quintan units attributable to
+                mission hardware. Initiating action: Quintan.
+                Terminal action: automatic, per protocol.
+  HYPOTHESES:   H-1 HOSTILE INTENT                 p=0.64
+                    Revision basis: interception of announced,
+                    unarmed emissary.
+  ADVISORY:     Announced approaches are treated as targets.
+                Announcement protocol: value negative.</pre>
+        <div class="b-title">Psychomonitoring</div>
+        <pre>  ALL SUBJECTS: Transient stress markers across crew following
+                engagement report. Decay to baseline within one
+                interval. No action.</pre>
+      </div>
+    </article>
+
+    <article class="entry" data-p="0.64">
+      <button class="e-head" aria-expanded="false">
+        <span class="h-line">ENTRY 08 · MISSION CLOCK T+0419:02                 HERMES / DEUS-1</span>
+        <span class="h-ref">REF: PERIMETER ATTACK; HULL CONTAMINATION</span>
+      </button>
+      <div class="e-body">
+        <div class="b-title">Tactical</div>
+        <pre>  SITUATION 1:  Fifty missiles detected inside vessel perimeter.
+                Warning interval: none.
+  ACTION 1:     Evasion by gravity toroids, executed at maximum
+                permitted structural load. Human tolerance exceeded:
+                full crew unconsciousness, duration 4-9 min.
+                Alternative with higher survival probability: none
+                computed.
+  SITUATION 2:  During solar-proximity recharge transit, hull
+                contamination by catalytic erosion agents (viroid
+                class). Erosion rate: increasing.
+  ACTION 2:     Decontamination by controlled transit of solar
+                prominence. Hull status: restored.
+  HYPOTHESES:   H-C ATTACKS: DIRECTED AT VESSEL     p=0.44
+                H-C ATTACKS: AUTONOMOUS ORDNANCE    p=0.41
+                H-C ATTACKS: RESIDUAL WAR MATERIAL  p=0.15
+                Working model adopted: conflict sphere external to
+                planetary control. Designation: war-sphere.
+                Model selection between H-C(1) and H-C(2):
+                RESOLUTION METHOD: STOCHASTIC.
+  ADVISORY:     Vessel survival now depends on reaction times outside
+                human range. Command latency noted.</pre>
+        <div class="b-title">Psychomonitoring</div>
+        <pre>  SUBJECT HARRACH: Aggression indices elevated post-engagement.
+                   Within tolerance. No action.
+  ALL OTHERS:      Recovery from induced unconsciousness complete.
+                   Within tolerance. No action.</pre>
+      </div>
+    </article>
+
+    <article class="entry" data-p="0.78">
+      <button class="e-head" aria-expanded="false">
+        <span class="h-line">ENTRY 09 · MISSION CLOCK T+0947:12                 HERMES / DEUS-1</span>
+        <span class="h-ref">REF: DEMONSTRATION, QUINTAN MOON</span>
+      </button>
+      <div class="e-body">
+        <div class="b-title">Tactical</div>
+        <pre>  SITUATION:    Council resolution adopted: six in favor, three
+                opposed, chair abstaining. Objective: destruction of
+                the Quintan moon as demonstration of capability
+                without loss of life. Warning transmission dispatched;
+                deadline attached. Reply: none.
+  ACTION:       Eighteen warheads launched on involute boring
+                trajectories. Cavitation computed to retain all
+                fragment masses in orbit.
+  RESULT:       Three warheads intercepted by night-launched surface
+                rockets during terminal phase. Cavitation eccentric.
+                Fragment dispersion exceeds computed envelope. Debris
+                infall on Quinta: coastal regions of the continent
+                Norstralia affected. Casualty estimate: no basis for
+                computation. Nonzero.
+  HYPOTHESES:   H-1 HOSTILE INTENT (STANDING)      p=0.78 (rev. 0.64)
+                    New supporting data: interception of warheads.
+                    Note: interception is consistent with defense.
+                    Revision retained.
+  ADVISORY:     Demonstration objective not achieved as computed.
+                Corrective options prepared on request.</pre>
+        <div class="b-title">Psychomonitoring</div>
+        <pre>  SUBJECT HARRACH:  Aggression indices elevated, third consecutive
+                    interval. Within tolerance. No action.
+  SUBJECT TEMPE:    Sleep architecture degraded. Motivational markers
+                    declining. Observation continued.
+  SUBJECT ARAGO:    Not under standard protocol. Verbal output logged.
+  ALL OTHERS:       Within tolerance. No action.</pre>
+      </div>
+    </article>
+
+    <article class="entry" data-p="0.78">
+      <button class="e-head" aria-expanded="false">
+        <span class="h-line">ENTRY 10 · MISSION CLOCK T+1015:48                 HERMES / DEUS-1</span>
+        <span class="h-ref">REF: CRUST SURVEY; INSTRUMENT ATTACKS</span>
+      </button>
+      <div class="e-body">
+        <div class="b-title">Tactical</div>
+        <pre>  SITUATION:    Layered magnetron imaging of Quintan crust initiated
+                (spinoscopy). Instrument platforms under armed guard.
+  RESULT:       Subterranean network structures mapped. Localized
+                calcium concentrations at site designated Medusa:
+                skeletal aggregates, count est. 10^6 order.
+                Population survival below surface: confirmed.
+  ENGAGEMENT:   Two rocket attacks on instrument platforms. All
+                attacking units destroyed. Secondary yield: exposure
+                of >1,000 concealed launch installations.
+  ASSESSMENT:   Commander's interpretation entered into record: debris
+                infall was drawn onto inhabited zones by Quintan
+                action. Verification: not possible.
+  ADVISORY:     Survey value high. Guard expenditure sustainable.</pre>
+        <div class="b-title">Psychomonitoring</div>
+        <pre>  SUBJECT TEMPE:    Motivational markers declining, second consecutive
+                    interval. Observation continued.
+  SUBJECT GERBERT:  Consultation load elevated. Within tolerance.
+  ALL OTHERS:       Within tolerance. No action.</pre>
+      </div>
+    </article>
+
+    <article class="entry" data-p="0.78">
+      <button class="e-head" aria-expanded="false">
+        <span class="h-line">ENTRY 11 · MISSION CLOCK T+1104:26                 HERMES / DEUS-1</span>
+        <span class="h-ref">REF: SOLASER RETASKING; PLANETARY BROADCAST</span>
+      </button>
+      <div class="e-body">
+        <div class="b-title">Tactical</div>
+        <pre>  SITUATION:    Solaser assembly complete. Original tasking: surface
+                and ring action. Retasking directive received:
+                signaling instrument. Assembler robots executed
+                conversion in stern hangar.
+  ACTION:       Wordless pictorial narrative composed per second
+                pilot's specification. Thematic sequence: hunting,
+                battle, closing dance. Composition executed by this
+                system. Projection onto cloud cover of all continents,
+                duration 3 days, day and night cycles.
+  BASIS:        Operating assumption entered by crew: any
+                technological civilization passed through a pictorial-
+                representation stage. Assumption: unverifiable.
+  RESULT:       See following entry.
+  ADVISORY:     Broadcast channel bypasses radio monopoly of military
+                receivers. Channel value: highest yet available.</pre>
+        <div class="b-title">Psychomonitoring</div>
+        <pre>  SUBJECT TEMPE:    Diagnosis: cessation of belief in the value of the
+                    contact objective, including subject's own
+                    proposal. Diagnosis presented to commander and
+                    medical officer per protocol. Advisory role
+                    resumed.
+  ALL OTHERS:       Within tolerance. No action.</pre>
+      </div>
+    </article>
+
+    <article class="entry" data-p="0.78">
+      <button class="e-head" aria-expanded="false">
+        <span class="h-line">ENTRY 12 · MISSION CLOCK T+1187:53                 HERMES / DEUS-1</span>
+        <span class="h-ref">REF: QUINTAN REPLY; VERIFICATION LANDERS</span>
+      </button>
+      <div class="e-body">
+        <div class="b-title">Tactical</div>
+        <pre>  SITUATION:    First structured Quintan transmission received.
+                Channel: binary-coded solar reflections from surface
+                mirror arrays, hectare scale. Content: invitation to
+                land at designated spaceport, characterized as
+                neutral; safety guaranteed; arrival to be announced by
+                neodymium laser.
+  ASSESSMENT:   Commander's analysis entered into record: neutral
+                authority inside a war of century duration requires
+                consent of all belligerents; probability of authentic
+                neutrality assessed as low. Trap hypothesis adopted
+                as working model.
+  ACTION:       Two automated landers dispatched for verification.
+  RESULT:       Landers returned. Cargo: crystalline floral objects
+                with delayed transition to ash; pictorial sequences
+                attributing selenoclasm casualties to this vessel;
+                formal acceptance of landing.
+  HYPOTHESES:   H-D REPLY: AUTHENTIC WELCOME       p=0.31
+                H-D REPLY: LURE                    p=0.47
+                H-D REPLY: MIXED / DIVIDED SOURCE  p=0.22
+                Discrimination: not achievable from available data.
+  ADVISORY:     Verification by expendable asset prior to any manned
+                commitment.</pre>
+        <div class="b-title">Psychomonitoring</div>
+        <pre>  ALL SUBJECTS: Anticipatory stress markers elevated across crew.
+                Within tolerance. No action.</pre>
+      </div>
+    </article>
+
+    <article class="entry" data-p="0.97">
+      <button class="e-head" aria-expanded="false">
+        <span class="h-line">ENTRY 13 · MISSION CLOCK T+1263:31                 HERMES / DEUS-1</span>
+        <span class="h-ref">REF: DECOY OPERATION; RING ACTION; FINAL ULTIMATUM</span>
+      </button>
+      <div class="e-body">
+        <div class="b-title">Tactical</div>
+        <pre>  SITUATION:    Reserve program activated: full-scale uncrewed replica
+                of this vessel, keel hold, program designation drawn
+                from scriptural reference (Genesis 19). Arrival
+                announced by neodymium laser per invitation. True
+                vessel withdrawn behind Sexta; observation by
+                disperson swarm (distributed crystal ommatidia).
+  RESULT:       Replica landing executed at designated spaceport.
+                T+4 s after drive shutdown: replica destroyed.
+                Strike characteristics: penetration to reactor
+                housing and stern; crew compartments and hull
+                preserved. Two causal mechanisms computed as
+                consistent: directed neutron stream; shaped charge
+                with cold anomalon warhead. Calibration objective
+                inferred: destruction of biological occupants,
+                preservation of vessel for capture and study.
+  CONSEQUENCE:  Working model TRAP: confirmed. Internal debate on
+                peaceful approach: closed per commander.
+  ACTION:       Retreat option presented by crew member; option
+                rejected by commander. Solaser directed at ice ring,
+                duration 6 min. Ring displaced from equilibrium.
+                Infall onto planetary surface: 10^12 t order,
+                distribution global. Casualty estimate: no basis for
+                computation. Order of magnitude: 10^6 or above.
+  TRANSMISSION: Ultimatum dispatched. Terms: reception of one human
+                envoy and his safe return within 70 h; on failure,
+                atmospheric sweep and planetoclasm.
+  HYPOTHESES:   H-1 HOSTILE INTENT (STANDING)      p=0.97 (rev. 0.78)
+  ADVISORY:     None requested.</pre>
+        <div class="b-title">Psychomonitoring</div>
+        <pre>  SUBJECT HARRACH:   Aggression indices: collapsed below baseline.
+                     Acute stress reaction following ring action.
+                     Diagnosis presented to commander and medical
+                     officer. Advisory role resumed.
+  SUBJECT STEERGARD: Decision latency reduced across last three
+                     command actions. Variance from simulated norm:
+                     rising. Within tolerance per current thresholds.
+                     Observation continued.
+  SUBJECT ARAGO:     Not under standard protocol. Verbal output
+                     logged. Frequency of the term "fiasco": noted.
+  SUBJECT TEMPE:     Volunteer status for envoy role registered.
+                     Motivational markers: reversed. Rise coincides
+                     with envoy designation. Observation continued.
+  ALL OTHERS:        Stress markers elevated, fourth consecutive
+                     interval. Within tolerance. No action.</pre>
+      </div>
+    </article>
+
+    <article class="entry" data-p="0.97">
+      <button class="e-head" aria-expanded="false">
+        <span class="h-line">ENTRY 14 · MISSION CLOCK T+1592:44                 HERMES / DEUS-1</span>
+        <span class="h-ref">REF: SURFACE MISSION, QUINTA</span>
+      </button>
+      <div class="e-body">
+        <div class="b-title">Tactical</div>
+        <pre>  SITUATION:    Landing party: one. Descent vehicle: Earth.
+                Destination: spaceport AAO35, Heparia. Communication
+                windows fixed. Ultimatum in force. On failure to
+                signal within the designated interval, solaser action
+                against surface targets is authorized by standing
+                resolution.
+  OBSERVATION:  Replica wreck at spaceport: microbial seeding
+                detected. Perimeter installations: combustion vessels
+                dispersing metallic aerosol; radiolocation through
+                cloud layer degraded. Reception structures: replica
+                of this vessel, inverted construction; greeting
+                procedure executed by no detected agent.
+  TELEMETRY:    Party descent: nominal. Party surface transit:
+                nominal. Surface structures at party position:
+                mound formations, gray crustal surface, count 10^3
+                order. Classification: pending. Party metabolic
+                sensor active; readings: multiple weak sources,
+                distribution coincident with mound field.
+  STATUS:       Party signal: not received at window open.
+                Party signal: not received at window +1.
+  ACTION:       Ultimatum provisions executed as authorized.
+  RESULT:       [RECORD INCOMPLETE]</pre>
+        <div class="b-title">Psychomonitoring</div>
+        <pre>  [NO ENTRY COMMITTED]</pre>
+      </div>
+    </article>
+
+  </div><!-- /log -->
+
+  <footer>
+    A creative response written for this project: all entries are original transformative text after Stanisław Lem's <em>Fiasco</em> (1986). No passages from the novel are reproduced.<br>
+    <em>Fiasco</em> © the Stanisław Lem Estate; English translation by Michael Kandel © Harcourt.
+  </footer>
+
+</div>
+
+<!-- scrollSpacer: permanent run-out space below the footer, so every
+     header — including the last ones — has a full viewport of scroll
+     room and can always reach the top of the screen -->
+<div id="scrollSpacer" style="height:calc(100vh - 80px)" aria-hidden="true"></div>
+
+<script>
+/* ==========================================================================
+   THE DEUS LOG — terminal behavior, v3
+   Purpose and use:
+   - The page loads with all entry bodies hidden; only headers show.
+   - Clicking a header opens the entry and TYPES its text out character by
+     character, with a synthesized teletype click per character batch
+     (Web Audio API; no audio files). Both ledgers type identically —
+     same color, same speed, same sound. Clicking again collapses the
+     entry; reopening shows the already-typed text instantly.
+   - The fixed strip shows the H-1 HOSTILE INTENT probability of the most
+     recently opened entry (from its data-p attribute).
+   - "Sound on/off" mutes the teletype. Reduced-motion preference disables
+     the typing animation (text appears at once, silently).
+   ========================================================================== */
+(function(){
+  "use strict";
+
+  /* ------------------------- configuration ------------------------- */
+  var CHARS_PER_TICK = 3;        /* characters printed per animation tick */
+  var TICK_MS        = 12;       /* delay between ticks, in milliseconds */
+  var CLICK_EVERY    = 2;        /* play a teletype click every N ticks */
+
+  /* user's reduced-motion preference: if set, typing is skipped entirely */
+  var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* -------------------------- sound engine ------------------------- */
+  /* Four modes, cycled by the corner button:
+     ping  — bright metallic tap: two inharmonic sine partials, fast decay
+     tick  — soft print-head strike: filtered noise burst (the original)
+     clank — heavier metallic knock: low inharmonic partials, longer decay
+     off   — silent                                                        */
+  var SOUND_MODES = ["ping", "tick", "clank", "off"];
+  /* soundMode holds the currently selected mode */
+  var soundMode = "ping";
+
+  /* audioCtx is created lazily on the first click, which also satisfies
+     browser autoplay policies (audio may only start after user input). */
+  var audioCtx = null;
+
+  /* getCtx: create or resume the shared AudioContext; null if unsupported */
+  function getCtx(){
+    if (!audioCtx) {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return null;
+      audioCtx = new Ctx();
+    }
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+
+  /* playPartials: metallic sounds are built from inharmonic sine partials
+     (frequency ratios that are NOT whole numbers — the signature of struck
+     metal). Each partial decays exponentially over decaySeconds. */
+  function playPartials(ctx, frequencies, decaySeconds, volume){
+    var now = ctx.currentTime;
+    frequencies.forEach(function(freq, i){
+      var osc = ctx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      var gain = ctx.createGain();
+      /* higher partials start quieter, as on real metal */
+      gain.gain.setValueAtTime(volume / (i + 1), now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + decaySeconds);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + decaySeconds);
+    });
+  }
+
+  /* playNoiseBurst: the original print-head strike — decaying noise
+     through a band-pass filter. */
+  function playNoiseBurst(ctx){
+    var now = ctx.currentTime;
+    var burstLength = Math.floor(ctx.sampleRate * 0.015);
+    var noiseBuffer = ctx.createBuffer(1, burstLength, ctx.sampleRate);
+    var samples = noiseBuffer.getChannelData(0);
+    for (var i = 0; i < burstLength; i++) {
+      samples[i] = (Math.random() * 2 - 1) * (1 - i / burstLength);
+    }
+    var source = ctx.createBufferSource();
+    source.buffer = noiseBuffer;
+    var filter = ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.value = 2400;
+    filter.Q.value = 2.5;
+    var gain = ctx.createGain();
+    gain.gain.value = 0.05;
+    source.connect(filter).connect(gain).connect(ctx.destination);
+    source.start(now);
+  }
+
+  /* playClick: one keystroke sound in the current mode */
+  function playClick(){
+    if (soundMode === "off" || reducedMotion) return;
+    var ctx = getCtx();
+    if (!ctx) { soundMode = "off"; return; }
+
+    if (soundMode === "ping") {
+      /* bright tap: high inharmonic pair, very fast decay */
+      playPartials(ctx, [3150, 5087], 0.045, 0.04);
+    } else if (soundMode === "clank") {
+      /* heavier knock: lower inharmonic partials, slightly longer ring */
+      playPartials(ctx, [1120, 1783, 2940], 0.09, 0.05);
+    } else {
+      playNoiseBurst(ctx);
+    }
+  }
+
+  /* sound-mode button: each press advances to the next mode */
+  var soundToggle = document.getElementById("soundToggle");
+  soundToggle.addEventListener("click", function(){
+    var next = (SOUND_MODES.indexOf(soundMode) + 1) % SOUND_MODES.length;
+    soundMode = SOUND_MODES[next];
+    /* label shows the active mode, capitalized */
+    soundToggle.textContent = "Sound: " +
+      soundMode.charAt(0).toUpperCase() + soundMode.slice(1);
+    playClick(); /* preview the newly selected sound */
+  });
+
+  /* ------------------------- typing machinery ----------------------- */
+  /* Each entry types its pre blocks in order. Full text is lifted out of
+     the DOM at load time so the blocks start empty. */
+
+  /* typeBlocks: type an array of {el, text} jobs sequentially.
+     entryState carries abort/timer flags; onDone runs after the last block. */
+  function typeBlocks(jobs, entryState, onDone){
+    if (jobs.length === 0) { onDone(); return; }
+    var job = jobs.shift();          /* current block to type */
+    var position = 0;                /* characters typed so far */
+    var tickCount = 0;               /* ticks elapsed, for click pacing */
+
+    /* the blinking cursor rides at the end of the growing text */
+    var cursor = document.createElement("span");
+    cursor.className = "cursor";
+    job.el.appendChild(cursor);
+
+    function tick(){
+      /* if the entry was collapsed mid-typing, finish instantly & silently */
+      if (entryState.aborted) {
+        job.el.textContent = job.text;
+        jobs.forEach(function(rest){ rest.el.textContent = rest.text; });
+        onDone();
+        return;
+      }
+      position = Math.min(position + CHARS_PER_TICK, job.text.length);
+      job.el.textContent = job.text.slice(0, position);
+      if (position < job.text.length) {
+        job.el.appendChild(cursor);
+        if (++tickCount % CLICK_EVERY === 0) playClick();
+        entryState.timer = setTimeout(tick, TICK_MS);
+      } else {
+        /* block complete: move on to the next one */
+        typeBlocks(jobs, entryState, onDone);
+      }
+    }
+    tick();
+  }
+
+  /* ------------------------ entry open/close ------------------------ */
+  /* Accordion behavior: at most one entry is open at a time. Opening an
+     entry automatically closes the previously open one. */
+  var entries = Array.prototype.slice.call(document.querySelectorAll(".entry"));
+
+  entries.forEach(function(entry){
+    var headButton = entry.querySelector(".e-head");
+    var preBlocks  = Array.prototype.slice.call(entry.querySelectorAll("pre"));
+
+    /* lift the full text out of each block so bodies start empty */
+    var savedTexts = preBlocks.map(function(pre){
+      var text = pre.textContent;
+      pre.textContent = "";
+      return text;
+    });
+
+    /* per-entry state: typed = animation already started once;
+       timer/aborted manage an in-progress animation */
+    var state = { typed:false, timer:null, aborted:false };
+
+    /* closeNow: collapse this entry. Any in-progress typing is aborted
+       and the full text written in, so reopening always shows a complete
+       record instantly. Exposed on the element for the accordion. */
+    function closeNow(){
+      state.aborted = true;
+      if (state.timer) clearTimeout(state.timer);
+      if (state.typed) {
+        preBlocks.forEach(function(pre, i){ pre.textContent = savedTexts[i]; });
+      }
+      entry.classList.remove("open");
+      headButton.setAttribute("aria-expanded", "false");
+    }
+    entry._closeNow = closeNow;
+
+    headButton.addEventListener("click", function(){
+      /* clicking an open entry simply closes it */
+      if (entry.classList.contains("open")) { closeNow(); return; }
+
+      /* accordion: close whichever entry is currently open */
+      var openEntry = document.querySelector(".entry.open");
+      if (openEntry && openEntry !== entry && openEntry._closeNow) {
+        openEntry._closeNow();
+      }
+
+      /* open this entry */
+      entry.classList.add("open");
+      headButton.setAttribute("aria-expanded", "true");
+
+      /* bring the clicked header to the top of the page: wait one frame
+         so the layout (previous entry closed, this one opened) is final,
+         then scroll to the header's document position explicitly — the
+         permanent run-out spacer guarantees enough room below even for
+         the last entries */
+      window.requestAnimationFrame(function(){
+        var headerTop = entry.getBoundingClientRect().top + window.pageYOffset - 8;
+        window.scrollTo({
+          top: headerTop,
+          behavior: reducedMotion ? "auto" : "smooth"
+        });
+      });
+
+      if (state.typed) return;  /* already typed once: text is present */
+
+      state.typed = true;
+      state.aborted = false;
+
+      if (reducedMotion) {
+        /* no animation: place all text at once */
+        preBlocks.forEach(function(pre, i){ pre.textContent = savedTexts[i]; });
+        return;
+      }
+
+      /* build the typing queue, but hold typing until the smooth scroll
+         has settled so the record starts printing at the top of the page */
+      var jobs = preBlocks.map(function(pre, i){
+        return { el: pre, text: savedTexts[i] };
+      });
+      state.timer = setTimeout(function(){
+        if (state.aborted) return;   /* entry was closed during the scroll */
+        typeBlocks(jobs, state, function(){ /* typing finished */ });
+      }, 450);  /* matches the typical smooth-scroll duration */
+    });
+  });
+})();
+</script>
+</body>
+</html>
