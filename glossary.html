@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+  ============================================================================
+  THE GLOSSARY — searchable index of Fiasco's people, places, things & coinages
+  ============================================================================
+  Purpose:
+    Presents the reference material of fiasco_index_characters_terms.md as one
+    single alphabetical, filterable list for Stanislaw Lem's "Fiasco".
+    Characters and terms are deliberately NOT separated: the reader looks a
+    name up without first having to decide what kind of thing it is.
+
+  How to use:
+    Static page, no backend. Upload next to index.html and link it from the
+    landing page (card No. 04). Two filters combine freely:
+      - the search box (matches entry name and description text),
+      - the A-Z strip (first letter of the entry name).
+
+  Data:
+    All entries live in the ENTRIES array below, one record per entry:
+      { n: name, d: description (may contain <em> tags) }
+    The array is sorted at load time, so records may be added in any order.
+  ============================================================================
+-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glossary &mdash; Fiasco</title>
+<meta name="description" content="A searchable index of every character, place, ship and coinage in Stanislaw Lem's Fiasco - from the Vitrifax to the war-sphere - in one alphabetical list.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ---- Design tokens shared with index.html (dossier: paper & ink) ---- */
+  :root{
+    --paper:#F1F3F4;   /* page background */
+    --ink:#1B242E;     /* primary text and hard borders */
+    --ink-soft:#5A6672;/* secondary text */
+    --human:#2C5F8A;   /* human-side accent (signal blue) */
+    --quintan:#7A2E2E; /* quintan / destructive accent (fire red) */
+    --amber:#B98A1F;   /* transitional accent */
+    --line:#C4CCD2;    /* hairline rules */
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--paper);color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;font-size:16px;line-height:1.55;
+  }
+  /* Central column, same measure as the landing page */
+  .sheet{max-width:760px;margin:0 auto;padding:56px 28px 72px}
+
+  /* ---- Header block (mirrors index.html and council.html) ---- */
+  header{border-top:6px solid var(--ink);padding-top:22px;margin-bottom:36px}
+  .doc-line{
+    display:flex;justify-content:space-between;align-items:baseline;
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.08em;
+    color:var(--ink-soft);text-transform:uppercase;margin-bottom:30px;flex-wrap:wrap;gap:6px;
+  }
+  .doc-line a{color:inherit;text-decoration:none;border-bottom:1px solid var(--line)}
+  h1{
+    font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;
+    font-size:clamp(52px,11vw,96px);line-height:.95;letter-spacing:-.01em;
+    text-transform:uppercase;
+  }
+  /* ---- Control panel: search box and A-Z strip ---- */
+  .controls{
+    border:2px solid var(--ink);background:#fff;padding:16px 18px 18px;
+    position:sticky;top:0;z-index:5;
+  }
+  .ctrl-label{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);
+    display:block;margin-bottom:6px;
+  }
+  #search{
+    width:100%;font-family:'IBM Plex Sans',sans-serif;font-size:16px;
+    padding:9px 11px;border:1px solid var(--line);background:var(--paper);color:var(--ink);
+  }
+  #search:focus{outline:2px solid var(--human);outline-offset:-2px}
+  /* A-Z strip, wrapping to as many rows as the viewport needs */
+  .letters{display:flex;flex-wrap:wrap;gap:4px;margin-top:14px}
+  .letters button{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;
+    letter-spacing:.08em;text-transform:uppercase;cursor:pointer;
+    background:transparent;color:var(--ink);border:1px solid var(--line);
+    padding:4px 7px;min-width:26px;text-align:center;
+  }
+  .letters button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .letters button:disabled{opacity:.28;cursor:default}
+  .letters button:focus-visible{outline:2px solid var(--human);outline-offset:2px}
+
+  /* ---- Result counter ---- */
+  .count{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-soft);margin:16px 0 6px;
+  }
+
+  /* ---- Alphabet divider, printed above the first entry of each letter ---- */
+  .letter-rule{
+    display:flex;align-items:center;gap:12px;margin:30px 0 10px;
+  }
+  .letter-rule span{
+    font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;
+    font-size:24px;line-height:1;color:var(--human);
+  }
+  .letter-rule::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  /* ---- One entry ---- */
+  .entry{
+    border-left:2px solid var(--line);padding:11px 0 11px 16px;margin-bottom:4px;
+  }
+  .entry:hover{border-left-color:var(--human)}
+  .entry{scroll-margin-top:24px}
+  /* brief highlight when an entry is reached from a link on another page */
+  .entry.flash{border-left-color:var(--human);background:#FBF3D8}
+  .entry-name{
+    font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;
+    font-size:19px;line-height:1.2;display:block;
+  }
+  .entry-desc{margin-top:5px;font-size:15px;color:var(--ink)}
+  .entry-desc em{font-style:italic}
+  /* Search hits, marked inside names and descriptions */
+  mark{background:#F6E4A8;color:inherit;padding:0 1px}
+
+  /* ---- Empty state ---- */
+  .empty{
+    border:1px dashed var(--line);padding:22px;text-align:center;
+    color:var(--ink-soft);font-size:14.5px;margin-top:24px;
+  }
+
+
+  @media (max-width:520px){
+    .controls{position:static}   /* a sticky panel eats too much of a phone screen */
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header>
+    <div class="doc-line">
+      <span><a href="index.html">&larr; Fiasco, a reading project</a></span>
+      <span>&#8470; 04 &middot; Reference</span>
+    </div>
+    <h1>Glossary</h1>
+  </header>
+
+  <!-- Control panel -->
+  <div class="controls">
+    <label class="ctrl-label" for="search">Search</label>
+    <input id="search" type="search" placeholder="solaser, war-sphere, Arago&hellip;" autocomplete="off">
+    <div class="letters" id="letters" role="group" aria-label="Filter by first letter"></div>
+  </div>
+
+  <p class="count" id="count"></p>
+
+  <!-- The single alphabetical list, rendered by script from the ENTRIES array -->
+  <div id="list"></div>
+
+  <div class="empty" id="empty" hidden>Nothing in the index matches that search.</div>
+
+
+</div>
+
+<script>
+/* ===========================================================================
+   1. DATA
+   One record per entry: n = name, d = description (may contain <em> tags).
+   People and terms share the list; order here does not matter, the array is
+   sorted below.
+   =========================================================================== */
+const ENTRIES = [
+{n:"Arago", d:"Dominican monk aboard as apostolic delegate; joins the <em>Hermes</em> crew as reserve physician by secret ballot. The mission's moral counter-voice: troubled by the ethics of resurrection, warns of the Trojan horse before departure, argues the Quintans' attack was a mistake rather than a crime, reframes the solaser as a pocket mirror, and finally predicts the mission will end in fiasco."},
+{n:"Davis", d:"Ship physician aboard the <em>Eurydice</em>, Gerbert's younger colleague; with Gerbert, chooses which frozen man to resurrect and falsifies the protocol to make the choice look scientific."},
+{n:"El Salam", d:"Physicist aboard the <em>Hermes</em>, chosen from a dozen SETI-presidium candidates; operates the solaser."},
+{n:"Gerbert", d:"Physician and <em>psychonicist</em> (mind expert) on the <em>Eurydice</em>, later one of the <em>Hermes</em> ten; the only crewman the resurrected survivor already knew well. The flight's sole reanimation failure &mdash; a loose umbilical clamp &mdash; nearly kills him."},
+{n:"Goss", d:"Small, weary chief of the Roembden spaceport on Titan; briefs Parvis on the terrain and reluctantly lets him attempt the rescue, guilty over having already let Pirx go."},
+{n:"Harrach", d:"First pilot of the <em>Hermes</em>; large, heavy, irascible; versed in information theory. Chief advocate of force: author of the &ldquo;show of strength&rdquo; doctrine and the selenoclasm proposal; left shattered by the ice-ring cataclysm he helped bring about."},
+{n:"Killian", d:"Contracted Digla operator who knew the Depression; the specialist meant for the rescue. Roembden intercepted Parvis's ship in the mistaken belief Killian was aboard &mdash; the banal mix-up that seeds the whole disaster."},
+{n:"Kirsting", d:"Exobiologist of the <em>Hermes</em> ten; his fatigued midnight spinoscopy &ldquo;discovers&rdquo; the cemetery of irradiated skeletons that may be partly his own projection."},
+{n:"Lauger", d:"The expedition's number-one physicist. Debates Arago on the ethics of contact, warns the council that all human reasoning about aliens smuggles in human assumptions, and co-authors the cosmological hypothesis for the Silent Universe."},
+{n:"London", d:"Goss's huge assistant; backs Parvis's request and feeds him scrambled eggs from the base's chickens."},
+{n:"Marlin", d:"Chief of the Grail mining base, waiting on the radiator cargo delayed by the dispatch mix-up."},
+{n:"Nakamura", d:"Physician of the <em>Hermes</em> ten. Author of the cosmic hypothesis (Quinta's engineering as self-rescue from Hades's future approach), of the verdict that DEUS inherited its makers' anthropocentrism, and of the pre-landing &ldquo;three riddles&rdquo; with their parting counsel of humility."},
+{n:"Parvis, Angus", d:"The protagonist of the Titan prologue: a 29-year-old major pilot of the cargo ship <em>Helios</em> who volunteers to walk a Digla into the Depression after the missing men. Trapped by a china-quake, he triggers the Vitrifax and is frozen. Whether the man later resurrected is Parvis or Pirx is permanently undecidable. (See also Tempe, Mark.)"},
+{n:"Pirx", d:"Famous fleet commander (recurring Lem character) who vanished taking a machine into the Depression; Parvis, once his intern, volunteers on the strength of his name. One of the two candidate identities of the resurrected survivor."},
+{n:"Polassar", d:"Gravistician of the <em>Hermes</em> ten, in charge of the drive; excellent swimmer and high-board diver."},
+{n:"Rotmont", d:"Logician of the <em>Hermes</em> ten; author of the &ldquo;alienated war-sphere&rdquo; hypothesis explaining the attack on <em>Gabriel</em>."},
+{n:"Sinko, Roman", d:"Parvis's copilot on the <em>Helios</em>."},
+{n:"Steergard", d:"Captain of the <em>Hermes</em>; backup specialty sociodynamic game theory. Decides the escalation at every fork &mdash; secretly by his father's Caesar coin at the first, openly by ultimatum at the last &mdash; and orders the ice-ring strike and the final solaser fire."},
+{n:"Tempe, Mark", d:"The man revived from Titan's Birnam glacier: unnamed at first, provisionally &ldquo;Mark,&rdquo; and finally second pilot Mark Tempe of the <em>Hermes</em>. Rebuilds his memory with Mnemon but never learns whether he is Pirx or Parvis, finally erasing the records. Author of the &ldquo;cartoons&rdquo; broadcast, though DEUS quietly diagnoses him as no longer believing in contact. As the lone envoy to Quinta he walks unknowing among the Quintans, misses his check-in deadline, and dies with them in the <em>Hermes</em>' final strike &mdash; recognizing them only in its glare."},
+{n:"Ter Horab", d:"Commander of the <em>Eurydice</em>, in charge of the flight; Steergard is his second-in-command."},
+{n:"Aesculapius (medicom)", d:"The <em>Eurydice</em>'s medical system; Mnemon is one of its subsystems."},
+{n:"Alienated war-sphere hypothesis", d:"The theory, proposed by Rotmont, that Quinta's orbital weapons attacked <em>Gabriel</em> on their own &mdash; not on anyone's orders, just a machine doing what it was built to do."},
+{n:"Ambassador", d:"Large remote-control orbiter shot toward the Sun to broadcast a formal greeting to Quinta by laser; its three weeks of unanswered signaling define the planet's silence."},
+{n:"Anthropic principle", d:"An argument that life should be widespread: the Universe's physical laws are precisely the ones life requires, so it can hardly be an accident. That only sharpens the mystery of why nobody is calling."},
+{n:"Autoevolution and bioconservatism", d:"Two roads open to a civilization advanced enough to rebuild itself. Autoevolution means remaking one's own biology and intelligence; bioconservatism means banning that by law and staying as Nature made you. The decision to autoevolve is effectively permanent &mdash; and either road tends to end the interest in talking to strangers."},
+{n:"Biosensor", d:"Tempe's aerobic/anaerobic life detector, which registers the wart-mounds' metabolic pulse he misreads as hidden shelters."},
+{n:"Birnam Wood", d:"Not a forest but a traveling field of frozen ammonium-hydrocarbon &ldquo;snow&rdquo; on Titan, hardening into a fragile china-like jungle up to a quarter-mile high; named for the moving wood in <em>Macbeth</em>. Its collapses are &ldquo;china quakes.&rdquo;"},
+{n:"Burning bush in space", d:"Lem's image of the rent Moon in the eighth second of the cavitation, its shock waves making the nearest stars pale."},
+{n:"Camouflage and mixers", d:"DEUS's concealment measures hiding the <em>Hermes</em>' artificial nature from any watching civilization."},
+{n:"Cartoons (planetary broadcast)", d:"Tempe's proposal: a wordless picture-story projected on the clouds of every continent, gambling that any technological civilization was once a cave-painting one."},
+{n:"Chapter 19 program", d:"SETI's reserve, named for Genesis 19: a beautifully built dummy <em>Hermes</em> in the locked loading bay, sent as bait while the real ship hides behind Sexta."},
+{n:"Coalsack", d:"The dark dust cloud hiding the Harpy's stars from earlier astronomers; the <em>Eurydice</em> must pass it."},
+{n:"Collapsars and Schwarzschild spheres", d:"The black-hole physics underpinning the temporal-harbor maneuver: tidal forces, accretion disks, Hawking evaporation."},
+{n:"Cosmic hypothesis", d:"Nakamura's conjecture that Zeta's system will pass perilously near Hades in approximately 5,000 years, and Quinta's strange engineering is a civilization trying to save itself."},
+{n:"Cosmological hypothesis", d:"Lauger and Nakamura's answer to the Silent Universe: civilizations do not perish but pass beyond astronomy toward purposes a chimpanzee-level mind cannot grasp."},
+{n:"Depression (Orlandia, Mare Hynicum)", d:"The treacherous geyser-riddled lowland on Titan; Orlandia is the region around it and Mare Hynicum the nearby sea."},
+{n:"DEUS (Digital Engrammic Universal System)", d:"The last-generation shipboard computer; decision core no bigger than a pigeon's egg, peripherals filling half the control room."},
+{n:"Digla", d:"The approximately 1,700-ton legged &ldquo;strider&rdquo; machine Parvis pilots into the Depression like a giant suit; one of the heaviest models."},
+{n:"Dispersons (bee's eyes)", d:"Swarms of microscopic crystal ommatidia scattered across millions of cubic miles around Sexta, serving as the hidden <em>Hermes</em>' remote vision."},
+{n:"Double-event-horizon collapsar", d:"<em>Gabriel</em>'s self-destruct: shorting the teratron produces a black hole that swallows the pursuers."},
+{n:"Embryonization (onax, embryonator)", d:"The suspension process for the parsec crossing: blood replaced by the milky oxygen-carrier <em>onax</em>, lungs collapsed, body sealed in a torpedo-shaped embryonator rated for 20 g. Successor to vitrifaction, which gave only 98% certainty of revival."},
+{n:"Engineer's grim eschatology", d:"The bleak position that intelligence and technology end in self-destruction."},
+{n:"<em>Eurydice</em>", d:"The mile-long segmented interstellar mother ship, built in orbit around Titan and launched by a forest of laser throwers; carries eighteen DEUSes and waits in the Hades temporal harbor."},
+{n:"Fake <em>Hermes</em> wreck", d:"The decoy's remains at AAO35, seeded with slow-acting viruses meant to infect the mother ship on the envoy's return."},
+{n:"Forests of photoreceptors", d:"Regular branching blocks imitating woodland on Quinta, absorbing more than 99% of sunlight &mdash; engineered light-traps of unknown purpose."},
+{n:"<em>Gabriel</em>", d:"The first lander: a two-stage rocket with contact programs it may revise under unforeseen circumstances; destroyed above Quinta in a coordinated four-rocket strike."},
+{n:"Galactography", d:"&ldquo;The archeology of the Milky Way.&rdquo;"},
+{n:"Gorgon and Typhon Ridge", d:"Titan lava ridges named, like much local geography, after Greek monsters."},
+{n:"Grail", d:"The uranium-mining base on Titan, approximately 110 miles from Roembden; the rescue's intended destination."},
+{n:"Gravitational resonance (temporal onion)", d:"Setting a collapsar oscillating like a struck gong to wrap it in stratified, curved space-time."},
+{n:"Hades", d:"The collapsar used as &ldquo;temporal harbor,&rdquo; where the <em>Eurydice</em> waits while the <em>Hermes</em> scouts Quinta."},
+{n:"<em>Helios</em>", d:"Parvis's general-cargo ship (home port Syrtis)."},
+{n:"Heparia", d:"Quinta's large northern continent; <em>Gabriel</em>'s landing site and later the site of spaceport AAO35."},
+{n:"<em>Hermes</em>", d:"The scout ship carrying the ten-person crew and two DEUSes from the <em>Eurydice</em> to the Zeta system; namesake of the gods' messenger, it ends as executioner."},
+{n:"Ice ring", d:"The unstable sheet of ice girdling Quinta (originally 3&ndash;4 trillion tons); Steergard's solaser strike finally cuts it down onto the planet."},
+{n:"Ignis fatuus (plasma flame)", d:"A nuclear-plasma fireball racing between two craters on Quinta's moon at 60 km/s, caged by a magnetic field of roughly 10<sup>10</sup> gauss; purpose wholly opaque."},
+{n:"Juno", d:"The outermost gas giant of the Zeta system, in whose shadow the <em>Hermes</em> brakes and hides."},
+{n:"Knowledge by unknowledge", d:"Yusupov's paradox: pursuing civilizations beyond the contact window, where any conclusion rests on what cannot be observed."},
+{n:"Mnemon", d:"The infinitely patient teaching-and-memory machine with which the survivor rebuilds his memory."},
+{n:"Moth and second wreck", d:"The two captured Quintan derelicts: a century-old satellite of roughly 200 tons, shaped like a moth and armored like a turtle, and a roughly 5-ton radar-absorbing &ldquo;cigar&rdquo; with a fresh melted hole."},
+{n:"Mystery of the Silent Universe", d:"The expedition's guiding enigma: the cosmos's silence despite the anthropic principle, spawning rival explanations from rarity to self-destruction to sociolysis."},
+{n:"Necroevolution (machine speciation)", d:"The theory that nonliving technology evolves and diversifies over time, much as biological species do &mdash; machines speciating without ever living."},
+{n:"Norstralia", d:"Quinta's western continent, twice the size of Africa; its shores are struck hardest by the falling lunar debris."},
+{n:"<em>Orpheus</em>", d:"The unmanned, single-use <em>gracer</em> missile that sets Hades oscillating at its resonant frequency, annihilating itself in one discharge."},
+{n:"Ortega&ndash;Nilssen diagram (window of contact)", d:"The chart of psychozoic development in the Universe, and its key corollary: a civilization can communicate across the stars only during a roughly 1,800&ndash;2,500-year window before autoevolution closes it off &mdash; the novel's main answer to the silence."},
+{n:"Paleoethnological constants", d:"Features Earth and Quinta plausibly share &mdash; two sexes, day/night, seasons, herbivores/carnivores, above all <em>hunting</em> as the engine of intelligence &mdash; the gamble underwriting the cartoons."},
+{n:"Parking room", d:"The <em>Hermes</em> control room used only under wild gravitational variation; its human crew a relic of classical astrogation."},
+{n:"Parliament", d:"The <em>Eurydice</em>'s fifth section, an amphitheater where the full crew assembles for the council."},
+{n:"Piezoelectric battery", d:"The moth-wreck's unfamiliar, non-nuclear power source."},
+{n:"Pocket-mirror concept", d:"Arago's reframing of the solaser: not a genocidal strike but a child's mirror flashing information onto the overcast sky, addressing the population rather than the military centers."},
+{n:"Project Cyclops", d:"The approximately 20-year search for extraterrestrial radio signals whose failure produced the Mystery of the Silent Universe."},
+{n:"Quinta", d:"The fifth planet of Zeta Harpyiae, target of the expedition; flagged as promising due to the thermonuclear activities on its polar circle, read as planetary engineering."},
+{n:"Quinta's Moon", d:"A cratered body roughly 1.5 times the mass of Earth's moon with an unretainable noble-gas atmosphere and no magnetic field &mdash; evidence of past engineering; target of the selenoclasm."},
+{n:"Radio noise (white-noise jamming)", d:"Hundreds of gigawatt transmitters flooding every band with chaos, as if to force reliance on cables; purpose unknown."},
+{n:"Retrochronal toroid", d:"The time-bending return maneuver bringing the <em>Eurydice</em> home about eight years after takeoff instead of two thousand."},
+{n:"Roembden (Crater)", d:"The Titan spaceport where Parvis lands; rival outpost to Grail."},
+{n:"Satellite swarm", d:"Nearly a million artificial satellites in layered orbits around Quinta; the largest are empty balloons, the active ones endlessly correct course and never strike the ring."},
+{n:"Selenoclasm (cavitation of the Moon)", d:"Harrach's &ldquo;non-lethal&rdquo; demonstration: eighteen sidereal warheads gasify the moon's core. Knocked eccentric by three Quintan interceptors, it drops approximately 100 trillion tons of debris onto the planet."},
+{n:"Sexta", d:"Airless, seismically active planet opposite the Sun from Quinta; the real <em>Hermes</em>' hiding place during the decoy operation."},
+{n:"SG and teletome", d:"DEUS's remote probing tools: the structural-graphic scan, the cutting teletome probe, and the bore-and-broach drilling sequence."},
+{n:"Show of strength", d:"Harrach's doctrine after the covert attack: violence as the remaining vocabulary of contact."},
+{n:"Sidereal engineering", d:"The capacity to build and operate across interstellar distances; later in the novel, the threshold beyond which civilizations pass out of human comprehension."},
+{n:"Silico-amino acids", d:"Silicon-based amino acids found in the wrecks' honeycomb linings: evidence of a &ldquo;technobiology&rdquo; halfway between tissue and machine."},
+{n:"Sociolysis", d:"The dissolution of a civilization into a frictionless post-scarcity &ldquo;Second Stone Age,&rdquo; each individual served by an obedient artificial environment; one explanation for the silence."},
+{n:"Solaser", d:"Sun-fed photon cannon built to graze Quinta's ring and atmosphere; rebuilt into the cartoons projector, then reverted to weapon for the ice-ring strike and the final fire."},
+{n:"Spaceport AAO35", d:"The designated neutral landing site on Heparia, ringed by red fire pots spraying metallic dust to blind radiolocation."},
+{n:"Spectrum of faiths", d:"Arago's analogy: like matter's spectral lines, faiths form a spectrum from animism through polytheism to personal-god religions."},
+{n:"Sphere", d:"In the Professor's recollection: a perfect refractive sphere from a termite mound that relentlessly attracts insects, is shielded only by lead, and vanishes from a locked safe."},
+{n:"Star-shaped agglomerations", d:"Metropolis-sized flattened stars with tangled &ldquo;runways&rdquo; dotting Quinta's continents; nothing moves on them, nothing lights them at night."},
+{n:"Straight-line arteries and migrating polar lights", d:"On Quinta: continent-crossing lines carrying no traffic, and aurora-like glows moved against the planet's rotation; both unexplained."},
+{n:"Technosphere", d:"The artificial environment within which intelligent beings discover they are the final biological remnant of their own origin."},
+{n:"Temporal-harbor paradox", d:"How the <em>Eurydice</em> can wait in a port that, to distant observers, exists only a moment, yet still meet the <em>Hermes</em> years later."},
+{n:"Teratron", d:"<em>Gabriel</em>'s terajoule drive, akin to a sidereal generator."},
+{n:"Everted replica", d:"A building on Heparia that proves to be a giant inside-out replica of the <em>Hermes</em>, crystalline flowers blooming and collapsing to ash beneath emerald signs reading THIS IS GREETING &mdash; ritual, mockery, or both."},
+{n:"Three speculative attack mechanisms", d:"Three theories for how the strike on <em>Gabriel</em> got past DEUS's defensive shield: dipole clouds coalescing into missiles, virtual particles from empty space, billion-gauss fields without precursor &mdash; all unknown to Earth's physics."},
+{n:"Titan", d:"Saturn's moon: setting of the prologue and birthplace of the <em>Eurydice</em>, built in its orbit."},
+{n:"Underground-civilization inference", d:"The reading that centuries of warfare drove the Quintans below the surface to live by radioelectronics."},
+{n:"Village", d:"Nickname for the core living section at the center of the <em>Hermes</em>."},
+{n:"Viroids (erosion viruses)", d:"Nonliving molecules that corrode and consume specific materials &mdash; often superconductors &mdash; multiplying as they spread; kin to the slow viruses seeding the decoy wreck."},
+{n:"Vitrifax", d:"The emergency device above a Digla operator that freezes him instantly as a last resort, preserving him in liquid nitrogen for a resurrection technology not yet achieved. The bell-shaped containers are recovered by the <em>Eurydice</em>."},
+{n:"Wart-mounds", d:"Bloated humps on the Heparian upland, registering a steady metabolic pulse. Tempe mistakes them for shelters; they are in fact the Quintans, identified only in the glare of the final strike."},
+{n:"War-sphere", d:"Quinta's self-sustaining sphere of automated conflict: jammed radio, viroid warfare, insubordinate autonomous weapons, abandoned megaprojects. Strategy controls the Quintans rather than the reverse; visitors register only as infections."}
+];
+
+/* ===========================================================================
+   2. PREPARATION
+   Each entry gains three derived fields used by sorting, filtering and the
+   alphabet strip.
+   =========================================================================== */
+/* Scratch element used to turn markup and HTML entities into plain text */
+const decoder = document.createElement("div");
+function plainText(html){
+  decoder.innerHTML = html;
+  return decoder.textContent;
+}
+
+ENTRIES.forEach(function(entry){
+  /* Sort key: plain lower-case text of the name, ignoring any opening quote */
+  entry.sortKey = plainText(entry.n).replace(/^['"\u2018\u201C]+/,"").toLowerCase();
+  /* First alphabetic character, used for the A-Z strip and the dividers */
+  const initial = entry.sortKey.match(/[a-z]/);
+  entry.letter = initial ? initial[0].toUpperCase() : "#";
+  /* Plain text of name plus description, for substring search */
+  entry.haystack = plainText(entry.n + " " + entry.d).toLowerCase();
+  /* Anchor id, so other pages can link straight to this entry:
+     "Quinta's Moon" becomes glossary.html#g-quintas-moon */
+  entry.id = "g-" + entry.sortKey.replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+});
+
+ENTRIES.sort(function(a,b){ return a.sortKey.localeCompare(b.sortKey); });
+
+/* ===========================================================================
+   3. FILTER STATE AND RENDERING
+   =========================================================================== */
+
+/* Live filter state, read by render() on every change */
+const state = { query:"", letter:"all" };
+
+/* Cached DOM handles */
+const dom = {
+  search:  document.getElementById("search"),
+  letters: document.getElementById("letters"),
+  count:   document.getElementById("count"),
+  list:    document.getElementById("list"),
+  empty:   document.getElementById("empty")
+};
+
+/* Escape a user string so it can be dropped into a regular expression */
+function escapeForRegExp(text){
+  return text.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+}
+
+/* Wrap search hits in <mark>. The text is split into tags, HTML entities and
+   plain runs first, so a match can never cut a tag or an entity in half. */
+function highlight(html, query){
+  if(!query){ return html; }
+  const pattern = new RegExp("(" + escapeForRegExp(query) + ")","gi");
+  return html.split(/(<[^>]+>|&[a-zA-Z#0-9]+;)/).map(function(piece){
+    /* Tags and entities pass through untouched; plain runs get marked */
+    if(piece.charAt(0) === "<" || piece.charAt(0) === "&"){ return piece; }
+    return piece.replace(pattern,"<mark>$1</mark>");
+  }).join("");
+}
+
+/* Does one entry survive the current filter state? */
+function matches(entry){
+  if(state.letter !== "all" && entry.letter !== state.letter){ return false; }
+  if(state.query && entry.haystack.indexOf(state.query) === -1){ return false; }
+  return true;
+}
+
+/* Build the HTML for one entry */
+function entryHTML(entry){
+  return '<div class="entry" id="' + entry.id + '">' +
+           '<span class="entry-name">' + highlight(entry.n, state.query) + '</span>' +
+           '<p class="entry-desc">' + highlight(entry.d, state.query) + '</p>' +
+         '</div>';
+}
+
+/* Redraw the list, inserting a divider whenever the initial letter changes */
+function render(){
+  const visible = ENTRIES.filter(matches);
+
+  let markup = "";
+  let currentLetter = "";
+  visible.forEach(function(entry){
+    if(entry.letter !== currentLetter){
+      currentLetter = entry.letter;
+      markup += '<div class="letter-rule"><span>' + currentLetter + '</span></div>';
+    }
+    markup += entryHTML(entry);
+  });
+  dom.list.innerHTML = markup;
+
+  dom.empty.hidden = visible.length > 0;
+  dom.count.textContent = visible.length + " of " + ENTRIES.length + " entries";
+
+  updateLetterAvailability();
+}
+
+/* Grey out letters that no entry matching the current search begins with */
+function updateLetterAvailability(){
+  const reachable = new Set();
+  ENTRIES.forEach(function(entry){
+    if(!state.query || entry.haystack.indexOf(state.query) !== -1){ reachable.add(entry.letter); }
+  });
+  dom.letters.querySelectorAll("button[data-letter]").forEach(function(button){
+    const letter = button.dataset.letter;
+    button.disabled = letter !== "all" && !reachable.has(letter);
+    button.setAttribute("aria-pressed", String(letter === state.letter));
+  });
+}
+
+/* ===========================================================================
+   4. CONTROL WIRING
+   =========================================================================== */
+
+/* Build the A-Z strip once ("All" plus the 26 letters) */
+(function buildLetterStrip(){
+  const labels = ["All"].concat("ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""));
+  dom.letters.innerHTML = labels.map(function(label){
+    const value = label === "All" ? "all" : label;
+    return '<button type="button" data-letter="' + value + '" aria-pressed="' +
+           (value === "all") + '">' + label + '</button>';
+  }).join("");
+})();
+
+/* A-Z strip: clicking the active letter releases the filter */
+dom.letters.addEventListener("click", function(event){
+  const button = event.target.closest("button[data-letter]");
+  if(!button || button.disabled){ return; }
+  state.letter = (button.dataset.letter === state.letter) ? "all" : button.dataset.letter;
+  render();
+});
+
+/* Search box */
+dom.search.addEventListener("input", function(){
+  state.query = dom.search.value.trim().toLowerCase();
+  render();
+});
+
+/* Arriving from another page at glossary.html#g-solaser: clear any filter,
+   scroll the entry into view and flash it so the eye finds it. */
+function goToHash(){
+  const id = window.location.hash.slice(1);
+  if(!id.startsWith("g-")){ return; }
+  state.query = ""; state.letter = "all"; dom.search.value = "";
+  render();
+  const target = document.getElementById(id);
+  if(!target){ return; }
+  target.scrollIntoView({behavior:"smooth", block:"center"});
+  target.classList.add("flash");
+  setTimeout(function(){ target.classList.remove("flash"); }, 1600);
+}
+window.addEventListener("hashchange", goToHash);
+
+/* First paint */
+render();
+goToHash();
+</script>
+</body>
+</html>

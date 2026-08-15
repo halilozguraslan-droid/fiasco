@@ -32,6 +32,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* glossary cross-links: blue and underlined wherever a term appears */
+  a.gl{color:var(--human);text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px}
+  a.gl:hover{background:var(--human);color:var(--paper)}
   /* ---- Design tokens shared with index.html (dossier: paper & ink) ---- */
   :root{
     --paper:#F1F3F4;   /* page background */
@@ -197,6 +200,34 @@
     .vote-btn:hover,.vote-btn:focus-visible{transform:none}
     .bar-fill{transition:none}
   }
+
+  /* ---- Glossary drawer: definitions shown without leaving the page ---- */
+  .gl-drawer{
+    position:fixed;left:0;right:0;bottom:0;z-index:60;
+    background:#fff;border-top:2px solid var(--ink);
+    box-shadow:0 -6px 24px rgba(27,36,46,.18);
+    transform:translateY(100%);transition:transform .22s ease;
+  }
+  .gl-drawer.open{transform:translateY(0)}
+  .gl-inner{max-width:760px;margin:0 auto;padding:18px 28px 22px;max-height:56vh;overflow-y:auto}
+  .gl-top{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+  .gl-term{
+    font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;font-size:21px;line-height:1.2;
+  }
+  .gl-close{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;background:transparent;border:1px solid var(--line);
+    color:var(--ink);padding:5px 9px;cursor:pointer;flex:none;
+  }
+  .gl-close:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .gl-def{margin-top:8px;font-size:15px;line-height:1.55;color:var(--ink)}
+  .gl-def em{font-style:italic}
+  .gl-more{
+    display:inline-block;margin-top:12px;
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--human);
+  }
+  @media (prefers-reduced-motion: reduce){ .gl-drawer{transition:none} }
 </style>
 </head>
 <body>
@@ -208,7 +239,7 @@
       <span>№ 02 · Interactive</span>
     </div>
     <h1>You Are<br>the Council</h1>
-    <p class="subtitle"><em>Hermes</em> crew met to vote.</p>
+    <p class="subtitle"><em><a class="gl" href="glossary.html#g-hermes">Hermes</a></em> crew met to vote.</p>
     <div class="spine" role="presentation"></div>
     <div class="spine-labels" aria-hidden="true"><span>Signal</span><span>Fire</span></div>
   </header>
@@ -216,15 +247,15 @@
   <!-- ============ 1. CONTEXT ============ -->
   <h2>The situation</h2>
   <div class="prose">
-    <p>The <em>Hermes</em> has crossed interstellar space to greet the first alien civilization humanity has found, and every attempt at conversation has failed or turned deadly. Three weeks of laser greetings from orbit met total silence. An unmanned, unarmed emissary craft was chased down by interceptors and destroyed itself rather than be captured — the mission's first deaths, on the other side. Then fifty missiles materialized inside the ship's own defensive perimeter without warning; the ship survived only through an evasive maneuver so violent it knocked the entire crew unconscious. Soon after, a cloud of corrosive agents began quietly eating the hull.</p>
-    <p>The planet below, Quinta, says nothing. Its cities show no lights. Its radio bands emit engineered noise on every wavelength. The crew's best theory is bleak: a civilization locked in a war so old that its weapons have moved into orbit and slipped out of anyone's control.</p>
+    <p>The <em><a class="gl" href="glossary.html#g-hermes">Hermes</a></em> has crossed interstellar space to greet the first alien civilization humanity has found, and every attempt at conversation has failed or turned deadly. Three weeks of laser greetings from orbit met total silence. An unmanned, unarmed emissary craft was chased down by interceptors and destroyed itself rather than be captured — the mission's first deaths, on the other side. Then fifty missiles materialized inside the ship's own defensive perimeter without warning; the ship survived only through an evasive maneuver so violent it knocked the entire crew unconscious. Soon after, a cloud of corrosive agents began quietly eating the hull.</p>
+    <p>The planet below, <a class="gl" href="glossary.html#g-quinta">Quinta</a>, says nothing. Its cities show no lights. Its radio bands emit engineered noise on every wavelength. The crew's best theory is bleak: a civilization locked in a war so old that its weapons have moved into orbit and slipped out of anyone's control.</p>
     <p>The council convenes. Ten people around one table: the captain in the chair, two pilots, five scientists, two physicians — and among them a Dominican monk, aboard as an observer of conscience.</p>
   </div>
 
   <!-- ============ 2. THE PROPOSAL ============ -->
   <h2>The proposal</h2>
   <div class="prose">
-    <p>The first pilot, Harrach, puts a plan on the table: <strong>cavitation of the moon</strong>. Precision warheads would tunnel into the core of Quinta's uninhabited moon and split it — carefully, so that every fragment stays in its existing orbit. A demonstration visible from the whole planet, calculated to harm no one. First a warning would be broadcast: answer our signals, or the moon goes. The machine intelligence DEUS has run the numbers and confirms the fragments will hold their path.</p>
+    <p>The first pilot, <a class="gl" href="glossary.html#g-harrach">Harrach</a>, puts a plan on the table: <strong><a class="gl" href="glossary.html#g-selenoclasm-cavitation-of-the-moon">cavitation of the moon</a></strong>. Precision warheads would tunnel into the core of <a class="gl" href="glossary.html#g-quinta">Quinta</a>'s uninhabited moon and split it — carefully, so that every fragment stays in its existing orbit. A demonstration visible from the whole planet, calculated to harm no one. First a warning would be broadcast: answer our signals, or the moon goes. The machine intelligence <a class="gl" href="glossary.html#g-deus-digital-engrammic-universal-system">DEUS</a> has run the numbers and confirms the fragments will hold their path.</p>
   </div>
 
   <!-- ============ 5. THE VOTE ============ -->
@@ -232,7 +263,7 @@
   <div class="vote-panel">
     <div class="vote-head">
       <span class="tag">Council in session · count open</span>
-      <div class="vote-question">Shatter Quinta's moon as a warning?</div>
+      <div class="vote-question">Shatter <a class="gl" href="glossary.html#g-quinta-s-moon">Quinta's moon</a> as a warning?</div>
     </div>
     <div class="vote-body">
       <p class="vote-note">Nine crew votes are already in the record. Cast yours — the count updates for every reader who follows you. Totals are shown after you vote.</p>
@@ -267,8 +298,8 @@
   <div class="aftermath" id="aftermath">
     <h2>What the council chose — and what followed</h2>
     <div class="prose">
-      <p>In the novel, the motion carries six to nothing. No one votes against; three stay silent; Arago objects and is not counted. The warning is broadcast. No answer comes.</p>
-      <p>Eighteen warheads fly. As they approach, Quinta launches rockets of its own that intercept three of them on the planet-facing side — and the surgical cavitation goes eccentric. Roughly a hundred trillion tons of lunar rock, meant to stay in orbit forever, fall instead onto the planet the demonstration was supposed to spare.</p>
+      <p>In the novel, the motion carries six to nothing. No one votes against; three stay silent; <a class="gl" href="glossary.html#g-arago">Arago</a> objects and is not counted. The warning is broadcast. No answer comes.</p>
+      <p>Eighteen warheads fly. As they approach, <a class="gl" href="glossary.html#g-quinta">Quinta</a> launches rockets of its own that intercept three of them on the planet-facing side — and the surgical cavitation goes eccentric. Roughly a hundred trillion tons of lunar rock, meant to stay in orbit forever, fall instead onto the planet the demonstration was supposed to spare.</p>
       <p>Step 11 on <a href="timeline.html">the escalation timeline</a> tells what happened next.</p>
     </div>
   </div>
@@ -395,5 +426,82 @@ function showTotals(counts, online){
 btnFor.addEventListener("click", () => castVote("for"));
 btnAgainst.addEventListener("click", () => castVote("against"));
 </script>
+
+<!-- Glossary drawer: filled and revealed by the script below -->
+<aside class="gl-drawer" id="glDrawer" aria-live="polite" aria-hidden="true">
+  <div class="gl-inner">
+    <div class="gl-top">
+      <span class="gl-term" id="glTerm"></span>
+      <button class="gl-close" id="glClose" type="button">Close</button>
+    </div>
+    <p class="gl-def" id="glDef"></p>
+    <a class="gl-more" id="glMore" href="glossary.html">Open in the glossary &rarr;</a>
+  </div>
+</aside>
+
+<script>
+/* ==========================================================================
+   GLOSSARY DRAWER
+   Purpose:
+     Keeps the reader on the page. Clicking any link with class "gl" shows the
+     term's definition in a panel at the foot of the screen instead of
+     navigating to the glossary. The link keeps its href, so opening it in a
+     new tab (middle-click, long-press) still reaches the glossary page.
+   Closing:
+     the Close button, the Escape key, or a click anywhere outside the panel.
+   ========================================================================== */
+(function(){
+  "use strict";
+
+  /* Definitions, keyed by the anchor slug used in every glossary link */
+  var DEFINITIONS = {"g-arago": {"n": "Arago", "d": "Dominican monk aboard as apostolic delegate; joins the <em>Hermes</em> crew as reserve physician by secret ballot. The mission's moral counter-voice: troubled by the ethics of resurrection, warns of the Trojan horse before departure, argues the Quintans' attack was a mistake rather than a crime, reframes the solaser as a pocket mirror, and finally predicts the mission will end in fiasco."}, "g-deus-digital-engrammic-universal-system": {"n": "DEUS (Digital Engrammic Universal System)", "d": "The last-generation shipboard computer; decision core no bigger than a pigeon's egg, peripherals filling half the control room."}, "g-harrach": {"n": "Harrach", "d": "First pilot of the <em>Hermes</em>; large, heavy, irascible; versed in information theory. Chief advocate of force: author of the &ldquo;show of strength&rdquo; doctrine and the selenoclasm proposal; left shattered by the ice-ring cataclysm he helped bring about."}, "g-hermes": {"n": "<em>Hermes</em>", "d": "The scout ship carrying the ten-person crew and two DEUSes from the <em>Eurydice</em> to the Zeta system; namesake of the gods' messenger, it ends as executioner."}, "g-quinta-s-moon": {"n": "Quinta's Moon", "d": "A cratered body roughly 1.5 times the mass of Earth's moon with an unretainable noble-gas atmosphere and no magnetic field &mdash; evidence of past engineering; target of the selenoclasm."}, "g-selenoclasm-cavitation-of-the-moon": {"n": "Selenoclasm (cavitation of the Moon)", "d": "Harrach's &ldquo;non-lethal&rdquo; demonstration: eighteen sidereal warheads gasify the moon's core. Knocked eccentric by three Quintan interceptors, it drops approximately 100 trillion tons of debris onto the planet."}, "g-quinta": {"n": "Quinta", "d": "The fifth planet of Zeta Harpyiae, target of the expedition; flagged as promising due to the thermonuclear activities on its polar circle, read as planetary engineering."}};
+
+  /* Panel parts */
+  var drawer = document.getElementById("glDrawer");
+  var termEl = document.getElementById("glTerm");
+  var defEl  = document.getElementById("glDef");
+  var moreEl = document.getElementById("glMore");
+
+  /* openDrawer: fill the panel from the slug and slide it up */
+  function openDrawer(slug){
+    var record = DEFINITIONS[slug];
+    if (!record) return false;          /* unknown term: let the link navigate */
+    termEl.innerHTML = record.n;
+    defEl.innerHTML  = record.d;
+    moreEl.href = "glossary.html#" + slug;
+    drawer.classList.add("open");
+    drawer.setAttribute("aria-hidden", "false");
+    return true;
+  }
+
+  /* closeDrawer: slide the panel back out of sight */
+  function closeDrawer(){
+    drawer.classList.remove("open");
+    drawer.setAttribute("aria-hidden", "true");
+  }
+
+  /* Any glossary link opens the panel rather than leaving the page.
+     Modified clicks (new tab, new window, download) are left alone. */
+  document.addEventListener("click", function(event){
+    var link = event.target.closest ? event.target.closest("a.gl") : null;
+    if (link) {
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+      var slug = (link.getAttribute("href").split("#")[1] || "");
+      if (openDrawer(slug)) event.preventDefault();
+      return;
+    }
+    /* a click outside the open panel closes it */
+    if (drawer.classList.contains("open") && !event.target.closest(".gl-drawer")) {
+      closeDrawer();
+    }
+  });
+
+  document.getElementById("glClose").addEventListener("click", closeDrawer);
+  document.addEventListener("keydown", function(event){
+    if (event.key === "Escape") closeDrawer();
+  });
+})();
+</script>
+
 </body>
 </html>
