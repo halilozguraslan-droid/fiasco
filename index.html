@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fiasco — a reading project on Stanisław Lem's last novel</title>
-<meta name="description" content="Essays, visualizations, and creative responses to Stanisław Lem's Fiasco (1986) — a first-contact mission where every step was reasonable on its own terms, and irreversible in combination. Featuring an escalation timeline, a live council vote, the mission log of the shipboard machine DEUS, and a glossary of the novel's people and coinages.">
+<meta name="description" content="Essays, visualizations, and creative responses to Stanisław Lem's Fiasco (1986) — a first-contact mission where every step was reasonable on its own terms, and irreversible in combination. Featuring an escalation timeline, a live council vote, the mission log of the shipboard machine DEUS, a glossary of the novel's people and coinages, and three cross-chapter thematic threads.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -25,18 +25,10 @@
   .sheet{max-width:760px;margin:0 auto;padding:56px 28px 72px}
 
   header{border-top:6px solid var(--ink);padding-top:22px}
-  .doc-line{
-    display:flex;justify-content:space-between;align-items:baseline;
-    font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.08em;
-    color:var(--ink-soft);text-transform:uppercase;margin-bottom:30px;flex-wrap:wrap;gap:6px;
-  }
   h1{
     font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;
     font-size:clamp(52px,11vw,96px);line-height:.95;letter-spacing:-.01em;
     text-transform:uppercase;
-  }
-  .subtitle{
-    margin-top:16px;max-width:560px;color:var(--ink-soft);font-size:16.5px;
   }
 
   /* signature: the signal-to-fire spine, laid horizontal */
@@ -99,12 +91,6 @@
     letter-spacing:.18em;text-transform:uppercase;display:block;margin-bottom:6px;
   }
 
-  footer{
-    margin-top:64px;border-top:1px solid var(--line);padding-top:16px;
-    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.05em;
-    color:var(--ink-soft);line-height:1.7;
-  }
-
   @media (prefers-reduced-motion: reduce){
     .card{transition:none}
     .card:hover,.card:focus-visible{transform:none;box-shadow:4px 4px 0 var(--ink)}
@@ -115,12 +101,7 @@
 <div class="sheet">
 
   <header>
-    <div class="doc-line">
-      <span>A reading project</span>
-      <span>Stanisław Lem · 1986</span>
-    </div>
     <h1>Fiasco</h1>
-    <p class="subtitle">Essays, visualizations, and creative responses to Lem's last novel — a first-contact mission in which each step was reasonable on its own terms, and irreversible in combination.</p>
     <div class="spine" role="presentation"></div>
     <div class="spine-labels" aria-hidden="true"><span>Signal</span><span>Fire</span></div>
   </header>
@@ -167,10 +148,14 @@
     <span class="card-go">Look something up →</span>
   </a>
 
-  <footer>
-    Original essays, visualizations, and summaries on this site are the author's own analytical and transformative work.<br>
-    <em>Fiasco</em> © the Stanisław Lem Estate; English translation by Michael Kandel © Harcourt.
-  </footer>
+  <a class="card" href="themes.html" style="margin-top:14px">
+    <div class="card-head">
+      <span class="card-num">№ 05</span>
+      <span class="card-title">Three Themes</span>
+    </div>
+    <div class="card-body">The novel's three cross-chapter threads — anthropocentric projection, the silent universe, and the delegation of judgment to machines — each traced chapter by chapter, with the supporting text a click away.</div>
+    <span class="card-go">Read the threads →</span>
+  </a>
 
 </div>
 </body>
