@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+  ============================================================
+  FIASCO INDEX — BBC-STYLE ARTICLE-ROW LAYOUT
+  ============================================================
+  Purpose: Homepage for the Fiasco reading project, styled after
+  BBC News: Inter typeface, BBC-grey/black palette (no red accent,
+  per project direction), sticky top nav, and each of the 5 pages
+  shown as a horizontal article row (thumbnail + headline + summary)
+  instead of bordered cards.
+
+  How to use:
+  - Nav links point to the 5 existing pages.
+  - Each row is a full-row link to its page; swap .thumb divs for
+    real <img> tags when artwork is available.
+  - Colors/type controlled via CSS custom properties in :root.
+  ============================================================
+-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiasco — a reading project on Stanisław Lem's last novel</title>
+<meta name="description" content="Essays, visualizations, and creative responses to Stanisław Lem's Fiasco (1986) — a first-contact mission where every step was reasonable on its own terms, and irreversible in combination.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ---- Design tokens: BBC-style grey/black palette, no red ---- */
+  :root{
+    --paper:#FFFFFF;       /* page background */
+    --ink:#141414;         /* primary text + accent (black, standing in for BBC red) */
+    --ink-soft:#5B5B5B;    /* secondary text / summaries */
+    --line:#E0E0E0;        /* hairline dividers between rows */
+    --thumb-bg:#D9D9D9;    /* placeholder thumbnail background */
+    --band:62px;           /* shared height of both header bands, taken from the nav row's natural size */
+  }
+
+  /* ---- Reset ---- */
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--paper);color:var(--ink);
+    line-height:1.4;
+  }
+  a{color:inherit;text-decoration:none}
+
+  /* ============================================================
+     TOP NAVIGATION BAR (BBC-style, two rows)
+     Row 1: centered logo, each letter in its own black box
+     Row 2: section links, centered, with active-item underline
+     ============================================================ */
+  header.top-nav{
+    position:sticky;top:0;z-index:10;
+    background:var(--paper);
+  }
+
+  /* ---- Both header bands share one height so the logo band
+     (page top → first divider) and the nav band (first divider →
+     second divider) measure exactly the same. Content in each is
+     vertically centered, so the height is the only thing that
+     determines the band size. ---- */
+  .logo-row,.nav-inner{
+    height:var(--band);            /* identical band height for both rows */
+    display:flex;align-items:center;justify-content:center;
+    border-bottom:1px solid var(--line);
+  }
+  .logo-row{padding:0 24px}
+  .logo-boxes{display:flex;gap:2px}
+  .logo-boxes span{
+    color:var(--ink);
+    font-weight:800;font-size:28px;line-height:1;
+    letter-spacing:.02em;
+  }
+
+  /* ---- Row 2: nav links ---- */
+  .nav-inner{
+    max-width:900px;margin:0 auto;padding:0 24px;
+    gap:22px;
+  }
+  .nav-links{
+    display:flex;gap:22px;list-style:none;
+  }
+  .nav-links a{
+    font-size:14px;font-weight:600;
+    padding:3px 0 8px;border-bottom:3px solid transparent;
+    transition:border-color .15s ease;
+  }
+  .nav-links a:hover,.nav-links a:focus-visible{
+    border-color:var(--ink);outline:none;
+  }
+  .nav-links a.active{border-color:var(--ink)}
+
+  /* ============================================================
+     INTRO STRIP — short lede, no hero image
+     ============================================================ */
+  .intro{max-width:700px;margin:0 auto;padding:28px 24px 4px;text-align:center}
+  .intro p{margin:0 auto;color:var(--ink);font-size:15.5px;font-weight:700}
+  .intro em{font-style:italic;color:var(--ink)}
+
+  /* ============================================================
+     RESPONSIVE
+     ============================================================ */
+  @media (max-width:600px){
+    .nav-links{gap:12px}
+  }
+
+  /* ============================================================
+     FOOTER — source-novel attribution + contact
+     ============================================================ */
+  footer.site-footer{
+    max-width:700px;margin:40px auto 0;padding:20px 24px 32px;
+    border-top:1px solid var(--line);
+    font-size:12.5px;color:var(--ink);
+    text-align:center;                 /* centered footer block */
+  }
+  footer.site-footer p{margin:0 0 10px}
+  footer.site-footer p:last-child{margin-bottom:0}
+  footer.site-footer a{text-decoration:underline}
+  /* Source links sit on one line, separated by a middot */
+  .footer-links a{white-space:nowrap}
+  .footer-links .sep{padding:0 8px;color:var(--line)}
+</style>
+</head>
+<body>
+
+  <!-- ===== TOP NAVIGATION (BBC-style: logo row, then link row) ===== -->
+  <header class="top-nav">
+    <!-- Row 1: logo -->
+    <div class="logo-row">
+      <div class="logo-boxes" aria-label="Fiasco">
+        <span>F</span><span>I</span><span>A</span><span>S</span><span>C</span><span>O</span>
+      </div>
+    </div>
+    <!-- Row 2: section links -->
+    <div class="nav-inner">
+      <ul class="nav-links">
+        <li><a href="#" class="active">Home</a></li>
+        <li><a href="timeline.html">Timeline</a></li>
+        <li><a href="council.html">Council</a></li>
+        <li><a href="deus.html">DEUS Log</a></li>
+        <li><a href="glossary.html">Glossary</a></li>
+        <li><a href="themes.html">Themes</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ===== INTRO STRIP (no hero) ===== -->
+  <div class="intro">
+    <p>In <em>Fiasco</em>*, the spacecraft Hermes crosses interstellar space to greet the first alien civilization humanity has ever found — and everything the crew does to open a conversation makes war more likely. This site examines how that happens, one decision at a time.</p>
+  </div>
+
+  <!-- ===== FOOTER: source-novel attribution + contact ===== -->
+  <footer class="site-footer">
+    <p>* <em>Fiasco</em> is a science fiction novel by Polish author Stanisław Lem, first published in 1986. The book was translated into English by Michael Kandel in 1987.</p>
+    <p>All names, events, and terminology on this site are drawn from the Kandel English translation. The timelines, thematic notes, glossary, and visualizations here are original commentary and analysis — a transformative work of criticism, not a substitute for the novel. <em>Fiasco</em> remains the copyright of the Estate of Stanisław Lem and its publishers; readers are encouraged to seek out the book itself.</p>
+    <p>This site exists to support readers of <em>Fiasco</em> as a companion to keep alongside the book rather than a shortcut around it.</p>
+    <p class="footer-links">
+      <a href="https://en.wikipedia.org/wiki/Fiasco_(novel)" target="_blank" rel="noopener">Wikipedia</a><span class="sep">·</span><a href="https://www.isfdb.org/cgi-bin/title.cgi?186660" target="_blank" rel="noopener">ISFDB title record</a>
+    </p>
+    <p>For contact: <a href="mailto:halil.ozgur.aslan2016@gmail.com">halil.ozgur.aslan2016@gmail.com</a></p>
+  </footer>
+
+</body>
+</html>
