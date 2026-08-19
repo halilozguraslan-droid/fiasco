@@ -1,162 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!--
+  ============================================================
+  FIASCO INDEX — BBC-STYLE ARTICLE-ROW LAYOUT
+  ============================================================
+  Purpose: Homepage for the Fiasco reading project, styled after
+  BBC News: Inter typeface, BBC-grey/black palette (no red accent,
+  per project direction), sticky top nav, and each of the 5 pages
+  shown as a horizontal article row (thumbnail + headline + summary)
+  instead of bordered cards.
+
+  How to use:
+  - Nav links point to the 5 existing pages.
+  - Each row is a full-row link to its page; swap .thumb divs for
+    real <img> tags when artwork is available.
+  - Colors/type controlled via CSS custom properties in :root.
+  ============================================================
+-->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fiasco — a reading project on Stanisław Lem's last novel</title>
-<meta name="description" content="Essays, visualizations, and creative responses to Stanisław Lem's Fiasco (1986) — a first-contact mission where every step was reasonable on its own terms, and irreversible in combination. Featuring an escalation timeline, a live council vote, the mission log of the shipboard machine DEUS, a glossary of the novel's people and coinages, and three cross-chapter thematic threads.">
+<meta name="description" content="Essays, visualizations, and creative responses to Stanisław Lem's Fiasco (1986) — a first-contact mission where every step was reasonable on its own terms, and irreversible in combination.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+  /* ---- Design tokens: BBC-style grey/black palette, no red ---- */
   :root{
-    --paper:#F1F3F4;
-    --ink:#1B242E;
-    --ink-soft:#5A6672;
-    --human:#2C5F8A;
-    --quintan:#7A2E2E;
-    --amber:#B98A1F;
-    --line:#C4CCD2;
+    --paper:#FFFFFF;       /* page background */
+    --ink:#141414;         /* primary text + accent (black, standing in for BBC red) */
+    --ink-soft:#5B5B5B;    /* secondary text / summaries */
+    --line:#E0E0E0;        /* hairline dividers between rows */
+    --thumb-bg:#D9D9D9;    /* placeholder thumbnail background */
+    --band:62px;           /* shared height of both header bands, taken from the nav row's natural size */
   }
+
+  /* ---- Reset ---- */
   *{margin:0;padding:0;box-sizing:border-box}
   body{
+    font-family:'Inter',sans-serif;
     background:var(--paper);color:var(--ink);
-    font-family:'IBM Plex Sans',sans-serif;font-size:16px;line-height:1.55;
+    line-height:1.4;
   }
-  .sheet{max-width:760px;margin:0 auto;padding:56px 28px 72px}
+  a{color:inherit;text-decoration:none}
 
-  header{border-top:6px solid var(--ink);padding-top:22px}
-  h1{
-    font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;
-    font-size:clamp(52px,11vw,96px);line-height:.95;letter-spacing:-.01em;
-    text-transform:uppercase;
-  }
-
-  /* signature: the signal-to-fire spine, laid horizontal */
-  .spine{
-    margin:34px 0 10px;height:4px;width:100%;
-    background:linear-gradient(to right,var(--human) 0%,var(--human) 34%,var(--amber) 58%,var(--quintan) 100%);
-  }
-  .spine-labels{
-    display:flex;justify-content:space-between;
-    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.22em;
-    text-transform:uppercase;color:var(--ink-soft);margin-bottom:44px;
+  /* ============================================================
+     TOP NAVIGATION BAR (BBC-style, two rows)
+     Row 1: centered logo, each letter in its own black box
+     Row 2: section links, centered, with active-item underline
+     ============================================================ */
+  header.top-nav{
+    position:sticky;top:0;z-index:10;
+    background:var(--paper);
   }
 
-  .lede{max-width:620px}
-  .lede p{margin-bottom:14px}
-  .lede em{font-style:italic}
-
-  h2{
-    font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:600;
-    letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);
-    border-top:1px solid var(--line);padding-top:14px;margin:46px 0 18px;
+  /* ---- Both header bands share one height so the logo band
+     (page top → first divider) and the nav band (first divider →
+     second divider) measure exactly the same. Content in each is
+     vertically centered, so the height is the only thing that
+     determines the band size. ---- */
+  .logo-row,.nav-inner{
+    height:var(--band);            /* identical band height for both rows */
+    display:flex;align-items:center;justify-content:center;
+    border-bottom:1px solid var(--line);
+  }
+  .logo-row{padding:0 24px}
+  .logo-boxes{display:flex;gap:2px}
+  .logo-boxes span{
+    color:var(--ink);
+    font-weight:800;font-size:28px;line-height:1;
+    letter-spacing:.02em;
   }
 
-  .card{
-    display:block;text-decoration:none;color:inherit;
-    border:2px solid var(--ink);background:#fff;
-    transition:transform .15s ease,box-shadow .15s ease;
+  /* ---- Row 2: nav links ---- */
+  .nav-inner{
+    max-width:900px;margin:0 auto;padding:0 24px;
+    gap:22px;
   }
-  .card:hover,.card:focus-visible{
-    transform:translate(-2px,-2px);
-    box-shadow:4px 4px 0 var(--ink);
-    outline:none;
+  .nav-links{
+    display:flex;gap:22px;list-style:none;
   }
-  .card:focus-visible{box-shadow:4px 4px 0 var(--human)}
-  .card-head{
-    display:flex;align-items:baseline;gap:12px;
-    padding:14px 18px;border-bottom:1px solid var(--line);
+  .nav-links a{
+    font-size:14px;font-weight:600;
+    padding:3px 0 8px;border-bottom:3px solid transparent;
+    transition:border-color .15s ease;
   }
-  .card-num{
-    font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;
-    color:var(--human);letter-spacing:.08em;
+  .nav-links a:hover,.nav-links a:focus-visible{
+    border-color:var(--ink);outline:none;
   }
-  .card-title{
-    font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;
-    font-size:22px;text-transform:uppercase;letter-spacing:.01em;
-  }
-  .card-body{padding:14px 18px 16px;color:var(--ink-soft);font-size:14.5px}
-  .card-go{
-    font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;
-    letter-spacing:.14em;text-transform:uppercase;color:var(--ink);
-    padding:0 18px 16px;display:block;
+  .nav-links a.active{border-color:var(--ink)}
+
+  /* ============================================================
+     INTRO STRIP — short lede, no hero image
+     ============================================================ */
+  .intro{max-width:700px;margin:0 auto;padding:28px 24px 4px;text-align:center}
+  .intro p{margin:0 auto;color:var(--ink);font-size:15.5px;font-weight:700}
+  .intro em{font-style:italic;color:var(--ink)}
+
+  /* ============================================================
+     RESPONSIVE
+     ============================================================ */
+  @media (max-width:600px){
+    .nav-links{gap:12px}
   }
 
-  .soon{
-    border:1px dashed var(--line);padding:14px 18px 16px;color:var(--ink-soft);
-    font-size:14.5px;margin-top:14px;background:transparent;
+  /* ============================================================
+     FOOTER — source-novel attribution + contact
+     ============================================================ */
+  footer.site-footer{
+    max-width:700px;margin:40px auto 0;padding:20px 24px 32px;
+    border-top:1px solid var(--line);
+    font-size:12.5px;color:var(--ink);
+    text-align:center;                 /* centered footer block */
   }
-  .soon .tag{
-    font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;
-    letter-spacing:.18em;text-transform:uppercase;display:block;margin-bottom:6px;
-  }
-
-  @media (prefers-reduced-motion: reduce){
-    .card{transition:none}
-    .card:hover,.card:focus-visible{transform:none;box-shadow:4px 4px 0 var(--ink)}
-  }
+  footer.site-footer p{margin:0 0 10px}
+  footer.site-footer p:last-child{margin-bottom:0}
+  footer.site-footer a{text-decoration:underline}
+  /* Source links sit on one line, separated by a middot */
+  .footer-links a{white-space:nowrap}
+  .footer-links .sep{padding:0 8px;color:var(--line)}
 </style>
 </head>
 <body>
-<div class="sheet">
 
-  <header>
-    <h1>Fiasco</h1>
-    <div class="spine" role="presentation"></div>
-    <div class="spine-labels" aria-hidden="true"><span>Signal</span><span>Fire</span></div>
+  <!-- ===== TOP NAVIGATION (BBC-style: logo row, then link row) ===== -->
+  <header class="top-nav">
+    <!-- Row 1: logo -->
+    <div class="logo-row">
+      <div class="logo-boxes" aria-label="Fiasco">
+        <span>F</span><span>I</span><span>A</span><span>S</span><span>C</span><span>O</span>
+      </div>
+    </div>
+    <!-- Row 2: section links -->
+    <div class="nav-inner">
+      <ul class="nav-links">
+        <li><a href="#" class="active">Home</a></li>
+        <li><a href="timeline.html">Timeline</a></li>
+        <li><a href="council.html">Council</a></li>
+        <li><a href="deus.html">DEUS Log</a></li>
+        <li><a href="glossary.html">Glossary</a></li>
+        <li><a href="themes.html">Themes</a></li>
+      </ul>
+    </div>
   </header>
 
-  <div class="lede">
-    <p>In <em>Fiasco</em>, the spacecraft <em>Hermes</em> crosses interstellar space to greet the first alien civilization humanity has ever found — and everything the crew does to open a conversation makes war more likely. This site examines how that happens, one decision at a time, and why a novel from 1986 keeps describing the present.</p>
+  <!-- ===== INTRO STRIP (no hero) ===== -->
+  <div class="intro">
+    <p>In <em>Fiasco</em>*, the spacecraft Hermes crosses interstellar space to greet the first alien civilization humanity has ever found — and everything the crew does to open a conversation makes war more likely. This site examines how that happens, one decision at a time.</p>
   </div>
 
-  <h2>Start here</h2>
-  <a class="card" href="timeline.html">
-    <div class="card-head">
-      <span class="card-num">№ 01</span>
-      <span class="card-title">The Escalation Timeline</span>
-    </div>
-    <div class="card-body">Every contact attempt of the mission to Quinta, human and Quintan, laid out on a single spine running from signal to fire — with illustrations and expandable accounts of each step. No prior knowledge of the novel needed.</div>
-    <span class="card-go">Open the timeline →</span>
-  </a>
+  <!-- ===== FOOTER: source-novel attribution + contact ===== -->
+  <footer class="site-footer">
+    <p>* <em>Fiasco</em> is a science fiction novel by Polish author Stanisław Lem, first published in 1986. The book was translated into English by Michael Kandel in 1987.</p>
+    <p>All names, events, and terminology on this site are drawn from the Kandel English translation. The timelines, thematic notes, glossary, and visualizations here are original commentary and analysis — a transformative work of criticism, not a substitute for the novel. <em>Fiasco</em> remains the copyright of the Estate of Stanisław Lem and its publishers; readers are encouraged to seek out the book itself.</p>
+    <p>This site exists to support readers of <em>Fiasco</em> as a companion to keep alongside the book rather than a shortcut around it.</p>
+    <p class="footer-links">
+      <a href="https://en.wikipedia.org/wiki/Fiasco_(novel)" target="_blank" rel="noopener">Wikipedia</a><span class="sep">·</span><a href="https://www.isfdb.org/cgi-bin/title.cgi?186660" target="_blank" rel="noopener">ISFDB title record</a>
+    </p>
+    <p>For contact: <a href="mailto:halil.ozgur.aslan2016@gmail.com">halil.ozgur.aslan2016@gmail.com</a></p>
+  </footer>
 
-  <a class="card" href="council.html" style="margin-top:14px">
-    <div class="card-head">
-      <span class="card-num">№ 02</span>
-      <span class="card-title">You Are the Council</span>
-    </div>
-    <div class="card-body">The pivotal decision of the mission, opened to every reader: the crew's votes are on record, the count is still open, and yours joins it — a live tally shared by everyone who visits.</div>
-    <span class="card-go">Take your seat →</span>
-  </a>
-
-  <a class="card" href="deus.html" style="margin-top:14px">
-    <div class="card-head">
-      <span class="card-num">№ 03</span>
-      <span class="card-title">The DEUS Log</span>
-    </div>
-    <div class="card-body">The mission as the machine kept it: fourteen telemetry entries from the shipboard computer that flew the <em>Hermes</em>, advised its captain, and monitored the crew — two ledgers per entry, never connected. Click a header; the record types itself out.</div>
-    <span class="card-go">Open the record →</span>
-  </a>
-
-
-  <a class="card" href="glossary.html" style="margin-top:14px">
-    <div class="card-head">
-      <span class="card-num">№ 04</span>
-      <span class="card-title">The Glossary</span>
-    </div>
-    <div class="card-body">Every person, place, ship, machine and coinage of the novel in one alphabetical list — from the Vitrifax that freezes a man on Titan to the war-sphere that answers for a planet. Searchable, and linked back into the timeline and the log.</div>
-    <span class="card-go">Look something up →</span>
-  </a>
-
-  <a class="card" href="themes.html" style="margin-top:14px">
-    <div class="card-head">
-      <span class="card-num">№ 05</span>
-      <span class="card-title">Three Themes</span>
-    </div>
-    <div class="card-body">The novel's three cross-chapter threads — anthropocentric projection, the silent universe, and the delegation of judgment to machines — each traced chapter by chapter, with the supporting text a click away.</div>
-    <span class="card-go">Read the threads →</span>
-  </a>
-
-</div>
 </body>
 </html>

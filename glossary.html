@@ -28,42 +28,64 @@
 <title>Glossary &mdash; Fiasco</title>
 <meta name="description" content="A searchable index of every character, place, ship and coinage in Stanislaw Lem's Fiasco - from the Vitrifax to the war-sphere - in one alphabetical list.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  /* ---- Design tokens shared with index.html (dossier: paper & ink) ---- */
+  /* ---- Design tokens: shared 1:1 with timeline.html so the two pages read
+     as one publication (white paper, ink borders, signal-blue accent) ---- */
   :root{
-    --paper:#F1F3F4;   /* page background */
-    --ink:#1B242E;     /* primary text and hard borders */
-    --ink-soft:#5A6672;/* secondary text */
-    --human:#2C5F8A;   /* human-side accent (signal blue) */
-    --quintan:#7A2E2E; /* quintan / destructive accent (fire red) */
-    --amber:#B98A1F;   /* transitional accent */
-    --line:#C4CCD2;    /* hairline rules */
+    --paper:#FFFFFF;   /* page background */
+    --ink:#141414;     /* primary text and hard borders */
+    --ink-soft:#5B5B5B;/* secondary text */
+    --human:#2C5F8A;   /* accent used for links, focus rings, highlights */
+    --quintan:#7A2E2E; /* fire-red accent, unused here but kept for parity */
+    --amber:#B98A1F;   /* transitional accent, kept for parity */
+    --line:#E0E0E0;    /* hairline rules */
+    --band:62px;       /* height of the top-nav bands */
   }
   *{margin:0;padding:0;box-sizing:border-box}
   body{
     background:var(--paper);color:var(--ink);
-    font-family:'IBM Plex Sans',sans-serif;font-size:16px;line-height:1.55;
+    font-family:'Inter',sans-serif;font-size:15px;line-height:1.5;
   }
-  /* Central column, same measure as the landing page */
-  .sheet{max-width:760px;margin:0 auto;padding:56px 28px 72px}
+  /* Central column, same measure as the timeline page */
+  .sheet{max-width:1060px;margin:0 auto;padding:0 40px 72px}
 
-  /* ---- Header block (mirrors index.html and council.html) ---- */
-  header{border-top:6px solid var(--ink);padding-top:22px;margin-bottom:36px}
-  .doc-line{
-    display:flex;justify-content:space-between;align-items:baseline;
-    font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.08em;
-    color:var(--ink-soft);text-transform:uppercase;margin-bottom:30px;flex-wrap:wrap;gap:6px;
+  /* ---------- top nav (identical structure to timeline.html) ---------- */
+  header.top-nav{background:var(--paper)}
+  .logo-row,.nav-inner{
+    height:var(--band);display:flex;align-items:center;justify-content:center;
+    border-bottom:1px solid var(--line);
   }
-  .doc-line a{color:inherit;text-decoration:none;border-bottom:1px solid var(--line)}
+  .logo-row{padding:0 24px}
+  .logo-boxes{display:flex;gap:2px}
+  .logo-boxes span{color:var(--ink);font-weight:800;font-size:28px;line-height:1;letter-spacing:.02em}
+  .nav-inner{max-width:900px;margin:0 auto;padding:0 24px;gap:22px}
+  .nav-links{display:flex;gap:22px;list-style:none}
+  .nav-links a{
+    color:inherit;text-decoration:none;font-size:14px;font-weight:600;
+    padding:3px 0 8px;border-bottom:3px solid transparent;transition:border-color .15s ease;
+  }
+  .nav-links a:hover,.nav-links a:focus-visible{border-color:var(--ink);outline:none}
+  .nav-links a.active{border-color:var(--ink)}
+
+  /* ---------- header ---------- */
+  header.doc-header{padding-top:22px;margin-bottom:14px;text-align:center}
   h1{
     font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;
-    font-size:clamp(52px,11vw,96px);line-height:.95;letter-spacing:-.01em;
+    font-size:clamp(34px,5vw,54px);line-height:1.02;letter-spacing:-.01em;
     text-transform:uppercase;
   }
-  /* ---- Control panel: search box and A-Z strip ---- */
+  .subtitle{
+    margin:14px auto 0;max-width:640px;color:var(--ink);font-size:15.5px;
+    text-align:center;
+  }
+
+  /* ---- Control panel: search box and A-Z strip, styled as a timeline card ---- */
   .controls{
-    border:2px solid var(--ink);background:#fff;padding:16px 18px 18px;
+    margin-top:30px;
+    background:#fff;border:2px solid var(--ink);border-radius:4px;
+    padding:16px 18px 18px;
+    box-shadow:0 1px 2px rgba(27,36,46,.06);
     position:sticky;top:0;z-index:5;
   }
   .ctrl-label{
@@ -72,8 +94,9 @@
     display:block;margin-bottom:6px;
   }
   #search{
-    width:100%;font-family:'IBM Plex Sans',sans-serif;font-size:16px;
+    width:100%;font-family:'Inter',sans-serif;font-size:16px;
     padding:9px 11px;border:1px solid var(--line);background:var(--paper);color:var(--ink);
+    border-radius:2px;
   }
   #search:focus{outline:2px solid var(--human);outline-offset:-2px}
   /* A-Z strip, wrapping to as many rows as the viewport needs */
@@ -82,16 +105,16 @@
     font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;
     letter-spacing:.08em;text-transform:uppercase;cursor:pointer;
     background:transparent;color:var(--ink);border:1px solid var(--line);
-    padding:4px 7px;min-width:26px;text-align:center;
+    padding:4px 7px;min-width:26px;text-align:center;border-radius:2px;
   }
   .letters button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
   .letters button:disabled{opacity:.28;cursor:default}
   .letters button:focus-visible{outline:2px solid var(--human);outline-offset:2px}
 
-  /* ---- Result counter ---- */
+  /* ---- Result counter, styled like the timeline's phase band ---- */
   .count{
     font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;
-    text-transform:uppercase;color:var(--ink-soft);margin:16px 0 6px;
+    text-transform:uppercase;color:var(--ink-soft);margin:20px 0 6px;
   }
 
   /* ---- Alphabet divider, printed above the first entry of each letter ---- */
@@ -104,44 +127,63 @@
   }
   .letter-rule::after{content:"";flex:1;height:1px;background:var(--line)}
 
-  /* ---- One entry ---- */
+  /* ---- One entry: flat left-rule style, no box around the text ---- */
   .entry{
     border-left:2px solid var(--line);padding:11px 0 11px 16px;margin-bottom:4px;
+    scroll-margin-top:24px;transition:border-left-color .15s ease;
   }
   .entry:hover{border-left-color:var(--human)}
-  .entry{scroll-margin-top:24px}
   /* brief highlight when an entry is reached from a link on another page */
   .entry.flash{border-left-color:var(--human);background:#FBF3D8}
   .entry-name{
     font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;
-    font-size:19px;line-height:1.2;display:block;
+    font-size:16.5px;letter-spacing:.01em;text-transform:uppercase;
+    line-height:1.2;display:block;
   }
-  .entry-desc{margin-top:5px;font-size:15px;color:var(--ink)}
+  .entry-desc{margin-top:6px;font-size:13.5px;color:var(--ink);font-weight:600;line-height:1.55}
   .entry-desc em{font-style:italic}
   /* Search hits, marked inside names and descriptions */
   mark{background:#F6E4A8;color:inherit;padding:0 1px}
 
   /* ---- Empty state ---- */
   .empty{
-    border:1px dashed var(--line);padding:22px;text-align:center;
+    border:1px dashed var(--line);border-radius:4px;padding:22px;text-align:center;
     color:var(--ink-soft);font-size:14.5px;margin-top:24px;
   }
 
-
+  @media (max-width:720px){
+    .sheet{padding:0 16px 56px}
+  }
   @media (max-width:520px){
     .controls{position:static}   /* a sticky panel eats too much of a phone screen */
   }
 </style>
 </head>
 <body>
+
+<header class="top-nav">
+  <div class="logo-row">
+    <div class="logo-boxes" aria-label="Fiasco">
+      <span>F</span><span>I</span><span>A</span><span>S</span><span>C</span><span>O</span>
+    </div>
+  </div>
+  <div class="nav-inner">
+    <ul class="nav-links">
+      <li><a href="index_r1.html">Home</a></li>
+      <li><a href="timeline.html">Timeline</a></li>
+      <li><a href="council.html">Council</a></li>
+      <li><a href="deus.html">DEUS Log</a></li>
+      <li><a href="glossary.html" class="active">Glossary</a></li>
+      <li><a href="themes.html">Themes</a></li>
+    </ul>
+  </div>
+</header>
+
 <div class="sheet">
 
-  <header>
-    <div class="doc-line">
-      <span><a href="index.html">&larr; Fiasco, a reading project</a></span>
-      <span>&#8470; 04 &middot; Reference</span>
-    </div>
+  <header class="doc-header">
     <h1>Glossary</h1>
+    <p class="subtitle">A searchable index of every character, place, ship, and coinage in Stanis&#322;aw Lem's <em>Fiasco</em> (1986) &mdash; from the Vitrifax to the war-sphere &mdash; in one alphabetical list.</p>
   </header>
 
   <!-- Control panel -->
@@ -157,7 +199,6 @@
   <div id="list"></div>
 
   <div class="empty" id="empty" hidden>Nothing in the index matches that search.</div>
-
 
 </div>
 

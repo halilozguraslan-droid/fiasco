@@ -62,15 +62,6 @@
   }
   .backlink:hover,.backlink:focus-visible{border-color:var(--phos);outline:none;text-shadow:var(--glow)}
 
-  /* ---- fixed sound-mode button (top-right corner) ---- */
-  .snd{
-    position:fixed;top:10px;right:12px;z-index:10;
-    font-family:inherit;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
-    background:#000;border:1px solid var(--phos-faint);color:var(--phos-dim);
-    padding:5px 11px;cursor:pointer;white-space:nowrap;
-  }
-  .snd:hover,.snd:focus-visible{border-color:var(--phos);color:var(--phos);outline:none}
-
   /* ---- the log list ---- */
   .log{margin-top:40px;border-top:1px solid var(--phos-faint)}
 
@@ -137,9 +128,6 @@
 </head>
 <body>
 
-<!-- fixed sound-mode toggle: cycles Ping / Tick / Clank / Off -->
-<button class="snd" id="soundToggle">Sound: Ping</button>
-
 <div class="sheet">
 
   <header>
@@ -148,8 +136,6 @@
       <span>Entries 01–14</span>
     </div>
     <h1>The DEUS Log</h1>
-    <p class="subtitle">Fourteen telemetry entries reconstructed from Stanisław Lem's <em>Fiasco</em> (1986) — the first-contact mission to Quinta as recorded by the shipboard computer that flew it, advised on it, and watched the crew who commanded it. Select an entry to read it.</p>
-    <a class="backlink" href="index.html">← Back to the project</a>
   </header>
 
   <div class="log" id="log">
@@ -602,8 +588,7 @@
   </div><!-- /log -->
 
   <footer>
-    A creative response written for this project: all entries are original transformative text after Stanisław Lem's <em>Fiasco</em> (1986). No passages from the novel are reproduced.<br>
-    <em>Fiasco</em> © the Stanisław Lem Estate; English translation by Michael Kandel © Harcourt.
+    The Deus Log was created by generative AI (Claude).
   </footer>
 
 </div>
@@ -640,14 +625,8 @@
   var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* -------------------------- sound engine ------------------------- */
-  /* Four modes, cycled by the corner button:
-     ping  — bright metallic tap: two inharmonic sine partials, fast decay
-     tick  — soft print-head strike: filtered noise burst (the original)
-     clank — heavier metallic knock: low inharmonic partials, longer decay
-     off   — silent                                                        */
-  var SOUND_MODES = ["ping", "tick", "clank", "off"];
-  /* soundMode holds the currently selected mode */
-  var soundMode = "ping";
+  /* Single fixed mode: ping — bright metallic tap made of two inharmonic
+     sine partials with a fast decay. Always on (unless reduced-motion). */
 
   /* audioCtx is created lazily on the first click, which also satisfies
      browser autoplay policies (audio may only start after user input). */
@@ -683,55 +662,14 @@
     });
   }
 
-  /* playNoiseBurst: the original print-head strike — decaying noise
-     through a band-pass filter. */
-  function playNoiseBurst(ctx){
-    var now = ctx.currentTime;
-    var burstLength = Math.floor(ctx.sampleRate * 0.015);
-    var noiseBuffer = ctx.createBuffer(1, burstLength, ctx.sampleRate);
-    var samples = noiseBuffer.getChannelData(0);
-    for (var i = 0; i < burstLength; i++) {
-      samples[i] = (Math.random() * 2 - 1) * (1 - i / burstLength);
-    }
-    var source = ctx.createBufferSource();
-    source.buffer = noiseBuffer;
-    var filter = ctx.createBiquadFilter();
-    filter.type = "bandpass";
-    filter.frequency.value = 2400;
-    filter.Q.value = 2.5;
-    var gain = ctx.createGain();
-    gain.gain.value = 0.05;
-    source.connect(filter).connect(gain).connect(ctx.destination);
-    source.start(now);
-  }
-
-  /* playClick: one keystroke sound in the current mode */
+  /* playClick: one keystroke ping sound */
   function playClick(){
-    if (soundMode === "off" || reducedMotion) return;
+    if (reducedMotion) return;
     var ctx = getCtx();
-    if (!ctx) { soundMode = "off"; return; }
-
-    if (soundMode === "ping") {
-      /* bright tap: high inharmonic pair, very fast decay */
-      playPartials(ctx, [3150, 5087], 0.045, 0.04);
-    } else if (soundMode === "clank") {
-      /* heavier knock: lower inharmonic partials, slightly longer ring */
-      playPartials(ctx, [1120, 1783, 2940], 0.09, 0.05);
-    } else {
-      playNoiseBurst(ctx);
-    }
+    if (!ctx) return;
+    /* bright tap: high inharmonic pair, very fast decay */
+    playPartials(ctx, [3150, 5087], 0.045, 0.04);
   }
-
-  /* sound-mode button: each press advances to the next mode */
-  var soundToggle = document.getElementById("soundToggle");
-  soundToggle.addEventListener("click", function(){
-    var next = (SOUND_MODES.indexOf(soundMode) + 1) % SOUND_MODES.length;
-    soundMode = SOUND_MODES[next];
-    /* label shows the active mode, capitalized */
-    soundToggle.textContent = "Sound: " +
-      soundMode.charAt(0).toUpperCase() + soundMode.slice(1);
-    playClick(); /* preview the newly selected sound */
-  });
 
   /* ------------------------- typing machinery ----------------------- */
   /* Each entry types its pre blocks in order. Full text is lifted out of

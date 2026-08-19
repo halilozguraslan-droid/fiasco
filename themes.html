@@ -3,102 +3,133 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Three Themes — Fiasco reading project</title>
+<title>Fiasco — Three Themes</title>
 <meta name="description" content="Three cross-chapter themes from Stanisław Lem's Fiasco (1986), each traced through its chapter-by-chapter appearances: anthropocentric projection, the silent universe, and the delegation of judgment to machines.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   /* ==========================================================================
-     THREE THEMES — themes page, matches the paper/ink document family used
-     by index.html and the card / hidden-text convention of timeline.html.
-     Three thematic threads, each a color-coded rail of cards. Every card
-     shows its chapter, title, and one-line claim; the supporting text is
-     hidden behind a native <details><summary>Full text</summary> control,
-     styled identically to the timeline page's expander (+ / – marker).
-     No script required — <details> handles show/hide natively. Every card
-     in every thread uses this same collapsed-by-default pattern.
+     THREE THEMES — restyled to match timeline.html's visual system: white
+     paper background, the same top nav band, the same centered all-caps
+     header + legend convention, and the identical card / "+ Full text"
+     expander pattern. Content is unchanged: three thematic threads, each a
+     color-coded rail of cards (chapter, title, one-line claim, hidden body).
+     No script required beyond the shared top-nav; <details> handles the
+     card expanders natively.
      ========================================================================== */
-
   :root{
-    --paper:#F1F3F4;      /* page background, matches index.html */
-    --ink:#1B242E;        /* primary text */
-    --ink-soft:#5A6672;   /* secondary text */
-    --line:#C4CCD2;       /* hairline rules */
-    --thread-a:#2C5F8A;   /* Anthropocentric projection — human blue (site's "human" color) */
-    --thread-b:#7A2E2E;   /* The Silent Universe — Quintan red (site's "quintan" color) */
-    --thread-c:#B98A1F;   /* Man, Machine & Judgment — amber (site's "amber" color) */
+    --paper:#FFFFFF;      /* page background, matches timeline.html */
+    --ink:#141414;        /* primary text / rule color */
+    --ink-soft:#5B5B5B;   /* secondary text */
+    --human:#2C5F8A;      /* site "human" blue, reused for Thread A rail */
+    --quintan:#7A2E2E;    /* site "quintan" red, reused for Thread B rail */
+    --amber:#B98A1F;      /* site amber, reused for Thread C rail */
+    --line:#E0E0E0;       /* hairline rules */
+    --band:62px;          /* fixed height of the top-nav bands */
   }
   *{margin:0;padding:0;box-sizing:border-box}
   body{
-    background:var(--paper);color:var(--ink);
-    font-family:'IBM Plex Sans',sans-serif;font-size:16px;line-height:1.55;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    line-height:1.45;
   }
-  .sheet{max-width:760px;margin:0 auto;padding:56px 28px 72px}
+  .sheet{max-width:1060px;margin:0 auto;padding:0 40px 72px}
 
-  header{border-top:6px solid var(--ink);padding-top:22px}
+  /* ---------- top nav (matches timeline.html / index_r1) ---------- */
+  header.top-nav{background:var(--paper)}
+  .logo-row,.nav-inner{
+    height:var(--band);display:flex;align-items:center;justify-content:center;
+    border-bottom:1px solid var(--line);
+  }
+  .logo-row{padding:0 24px}
+  .logo-boxes{display:flex;gap:2px}
+  .logo-boxes span{color:var(--ink);font-weight:800;font-size:28px;line-height:1;letter-spacing:.02em}
+  .nav-inner{max-width:900px;margin:0 auto;padding:0 24px;gap:22px}
+  .nav-links{display:flex;gap:22px;list-style:none}
+  .nav-links a{
+    color:inherit;text-decoration:none;font-size:14px;font-weight:600;
+    padding:3px 0 8px;border-bottom:3px solid transparent;transition:border-color .15s ease;
+  }
+  .nav-links a:hover,.nav-links a:focus-visible{border-color:var(--ink);outline:none}
+  .nav-links a.active{border-color:var(--ink)}
+
+  /* ---------- page header (mirrors timeline.html's h1 + subtitle) ---------- */
+  header.doc-header{padding-top:22px;margin-bottom:14px}
   h1{
     font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;
-    font-size:clamp(40px,9vw,72px);line-height:.98;letter-spacing:-.01em;
-    text-transform:uppercase;
+    font-size:clamp(34px,5vw,54px);line-height:1.02;letter-spacing:-.01em;
+    text-transform:uppercase;text-align:center;
   }
-  .backlink{
-    display:inline-block;margin-top:20px;font-family:'IBM Plex Mono',monospace;
-    font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
-    color:var(--ink);text-decoration:none;border-bottom:1px solid var(--ink);
+  .subtitle{
+    margin:14px auto 0;max-width:640px;color:var(--ink);font-size:15.5px;
+    text-align:center;
   }
+  /* legend / jump-nav: same band styling as timeline.html's .legend,
+     one swatch+link per thread so the rail color is learned up front */
+  .legend{
+    margin-top:30px;display:flex;flex-wrap:wrap;gap:26px;align-items:center;
+    justify-content:center;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    padding:13px 2px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;
+    letter-spacing:.05em;text-transform:uppercase;color:var(--ink);
+  }
+  .key{display:flex;align-items:center;gap:8px}
+  .key a{color:inherit;text-decoration:none}
+  .key a:hover{text-decoration:underline}
+  .swatch{width:22px;height:12px;border-radius:2px;flex:none}
+  .swatch.a{background:var(--human)}
+  .swatch.b{background:var(--quintan)}
+  .swatch.c{background:var(--amber)}
 
-  /* jump nav: three tabs, one per thread, colored to match each rail */
-  .jumpnav{
-    display:flex;gap:8px;flex-wrap:wrap;margin-top:34px;padding-top:18px;
-    border-top:1px solid var(--line);
-  }
-  .jumpnav a{
-    font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;
-    letter-spacing:.06em;text-decoration:none;color:var(--ink);
-    padding:7px 12px;border:1.5px solid var(--ink);background:#fff;
-  }
-  .jumpnav a:hover,.jumpnav a:focus-visible{color:#fff;outline:none}
-  .jumpnav a[data-c="a"]:hover{background:var(--thread-a);border-color:var(--thread-a)}
-  .jumpnav a[data-c="b"]:hover{background:var(--thread-b);border-color:var(--thread-b)}
-  .jumpnav a[data-c="c"]:hover{background:var(--thread-c);border-color:var(--thread-c)}
-
-  /* each thread is a section with a colored left rail carried by the
-     heading block and by every card beneath it */
-  .thread{margin-top:64px;scroll-margin-top:20px}
-  .thread-head{border-left:6px solid var(--rail);padding-left:18px}
+  /* ---------- threads ---------- */
+  .thread{margin-top:56px;scroll-margin-top:var(--band)}
+  .thread:first-of-type{margin-top:46px}
+  .thread-head{text-align:center}
   .thread-title{
     font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;
-    font-size:clamp(24px,4.5vw,32px);text-transform:uppercase;letter-spacing:0;
-    line-height:1.1;
+    font-size:clamp(22px,4vw,30px);text-transform:uppercase;letter-spacing:0;
+    line-height:1.1;color:var(--rail);
   }
-  /* the throughline: a short synthesis paragraph, set off in italic */
+  /* the throughline: a short synthesis paragraph, set off in italic,
+     centered and width-constrained the same way as the page subtitle */
   .throughline{
-    margin-top:22px;padding-left:18px;border-left:6px solid var(--rail);
-    font-size:15.5px;color:var(--ink);
+    margin:14px auto 0;max-width:640px;padding:0 18px;
+    font-size:15px;color:var(--ink);text-align:center;
   }
   .throughline em{font-style:italic}
 
-  /* ---------- cards (same construction as timeline.html) ---------- */
-  .stops{margin-top:26px;display:flex;flex-direction:column;gap:14px}
+  /* ---------- cards (identical construction to timeline.html's .card) ---------- */
+  /* card column shares the 640px measure used by the headings above,
+     so the left and right gaps match across the whole page */
+  .stops{
+    margin:26px auto 0;max-width:640px;
+    display:flex;flex-direction:column;gap:14px;
+  }
   .card{
     background:#fff;border:2px solid var(--ink);border-radius:4px;
     overflow:hidden;box-shadow:0 1px 2px rgba(27,36,46,.06);
     border-left:4px solid var(--rail);
   }
   .card-head{
-    display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+    display:flex;align-items:center;justify-content:flex-start;gap:10px;flex-wrap:wrap;
     padding:9px 14px 7px;border-bottom:2px solid var(--ink);
   }
   .card-chapter{
-    font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:12px;
-    color:var(--rail);white-space:nowrap;
+    font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:11.5px;
+    letter-spacing:.06em;text-transform:uppercase;
+    color:#fff;background:var(--rail);border:1px solid var(--ink);
+    padding:2px 7px;border-radius:2px;white-space:nowrap;
   }
   .card-title{
     font-family:'IBM Plex Sans Condensed',sans-serif;font-weight:700;
-    font-size:15.5px;letter-spacing:.01em;text-transform:uppercase;flex:1;
+    font-size:16.5px;letter-spacing:.01em;text-transform:uppercase;
   }
-  .card-body{padding:10px 14px 12px}
-  .cl-desc{font-size:14px;color:var(--ink);font-weight:600}
+  /* card body text left-aligned for readability; the box itself stays
+     centered on the page via the .stops measure */
+  .card-body{padding:10px 14px 12px;text-align:left}
+  .cl-desc{font-size:13.5px;color:var(--ink);font-weight:600}
 
   /* ---------- full-text expander (identical pattern to timeline.html) ---------- */
   details.full{margin-top:10px}
@@ -117,13 +148,18 @@
   }
   details.full summary:focus-visible{outline:2px solid var(--rail);outline-offset:2px}
   details.full[open] summary{color:var(--ink);border-color:var(--ink-soft)}
+  /* expanded body: justified for an even right edge, with a hairline
+     rule above */
   .full-text{
-    margin-top:9px;padding:10px 12px;
-    background:var(--paper);border-left:2px solid var(--line);
-    font-size:13.5px;color:var(--ink);font-weight:400;line-height:1.55;
+    margin-top:9px;padding:12px 12px 4px;text-align:justify;
+    background:var(--paper);border-top:1px solid var(--line);
+    font-size:13px;color:var(--ink);font-weight:600;line-height:1.55;
   }
   .full-text em{font-style:italic}
 
+  @media (max-width:720px){
+    .sheet{padding:0 16px 56px}
+  }
   @media print{
     .card{box-shadow:none}
     details.full{display:none}
@@ -131,21 +167,34 @@
 </style>
 </head>
 <body>
+
+<header class="top-nav">
+  <div class="logo-row">
+    <div class="logo-boxes" aria-label="Fiasco">
+      <span>F</span><span>I</span><span>A</span><span>S</span><span>C</span><span>O</span>
+    </div>
+  </div>
+  <div class="nav-inner">
+    <ul class="nav-links">
+      <li><a href="index_r1.html">Home</a></li>
+      <li><a href="timeline.html">Timeline</a></li>
+      <li><a href="council.html">Council</a></li>
+      <li><a href="deus.html">DEUS Log</a></li>
+      <li><a href="glossary.html">Glossary</a></li>
+      <li><a href="themes.html" class="active">Themes</a></li>
+    </ul>
+  </div>
+</header>
+
 <div class="sheet">
 
-  <header>
-    <h1>Three Themes</h1>
-    <a class="backlink" href="index.html">← Back to the project</a>
-
-    <nav class="jumpnav" aria-label="Jump to a thread">
-      <a href="#thread-a" data-c="a">① Anthropocentric Projection</a>
-      <a href="#thread-b" data-c="b">② The Silent Universe</a>
-      <a href="#thread-c" data-c="c">③ Man, Machine, Judgment</a>
-    </nav>
+  <header class="doc-header">
+    <h1>Themes</h1>
+    <p class="subtitle">Three cross-chapter threads through <em>Fiasco</em> — each traced chapter by chapter, from first appearance to final consequence.</p>
   </header>
 
   <!-- ============================= THREAD A ============================= -->
-  <section class="thread" id="thread-a" style="--rail:var(--thread-a)">
+  <section class="thread" id="thread-a" style="--rail:var(--human)">
     <div class="thread-head">
       <h2 class="thread-title">Anthropocentric Projection</h2>
     </div>
@@ -161,7 +210,7 @@
           <span class="card-title">Birnam Wood</span>
         </div>
         <div class="card-body">
-          <p class="cl-desc">We can perceive the unknown only by projecting ourselves onto it — and that projection is a trap.</p>
+          <p class="cl-desc">We can perceive the unknown only by projecting ourselves onto it .</p>
           <details class="full"><summary>Full text</summary>
             <p class="full-text">Parvis chases his own magnified shadow (the Brocken Specter) at full speed, mistaking himself for the man he is hunting, and nearly dies for it. Paired with the compulsive naming — Birnam Wood, Gorgon, Typhon, the latent Grail/Parsifal — the chapter argues we never actually meet the other; we meet reflections of ourselves dressed in our own myths. This is the philosophical core the rest of the novel enacts on a cosmic scale in the failed contact with the Quintans.</p>
           </details>
@@ -174,7 +223,7 @@
           <span class="card-title">SETI</span>
         </div>
         <div class="card-body">
-          <p class="cl-desc">Anthropocentric projection — dressing the alien in our own myths.</p>
+          <p class="cl-desc">Anthropocentric projection as dressing the alien in our own myths.</p>
           <details class="full"><summary>Full text</summary>
             <p class="full-text">Even as it prepares to meet the genuinely nonhuman, the expedition has "plundered the Greeks": Eurydice, Hermes, Hades, Orpheus, Cerberus. Lauger jokes about it, but the naming carries the same warning as Birnam Wood in Chapter I — we approach the unknown wrapped in our own stories, and the gap between the myth and the reality is where the fiasco lives.</p>
           </details>
@@ -187,7 +236,7 @@
           <span class="card-title">Beta Harpyiae</span>
         </div>
         <div class="card-body">
-          <p class="cl-desc">We can't understand the aliens, because our whole way of thinking quietly assumes they think like us — and they may not.</p>
+          <p class="cl-desc">We can't understand the aliens, since our whole way of thinking quietly assumes they think like us.</p>
           <details class="full"><summary>Full text</summary>
             <p class="full-text">Lauger's speech to the council is the heart of the chapter. The crew's powerful instruments pick up strange signals from Quinta, but calling them "the work of a civilization" explains nothing; it just hides the guess that we could ever make sense of alien behavior. Astronomers once "saw" canals on Mars and jungles on Venus — really just their own ideas, later thrown out. As Lauger says, a mind acts on its own purposes, which may be nothing like ours.</p>
           </details>
@@ -213,7 +262,7 @@
           <span class="card-title">The Moon</span>
         </div>
         <div class="card-body">
-          <p class="cl-desc">Ruins that may not be ruins — reading a civilization through its leavings.</p>
+          <p class="cl-desc">Ruins that may not be ruins.</p>
           <details class="full"><summary>Full text</summary>
             <p class="full-text">What the crew finds around Quinta is titanic engineering seemingly halted mid-work: the unstable ice ring, the million-satellite swarm, the engineered noble-gas atmosphere, the caged plasma flame between craters. Each is a monument without legible purpose. The Quintans are inferred backward from their leavings, like a vanished people read through postholes — except these "ruins" may still be operational, simply unintelligible. Sufficient alien intelligence may be unreadable not because it hides, but because its purposes don't map onto human frames.</p>
           </details>
@@ -265,7 +314,7 @@
           <span class="card-title">A Cosmic Eschatology</span>
         </div>
         <div class="card-body">
-          <p class="cl-desc">Knowledge by unknowledge — the limit of anthropocentric reach.</p>
+          <p class="cl-desc">Knowledge by unknowledge.</p>
           <details class="full"><summary>Full text</summary>
             <p class="full-text">Yusupov's phrase names the expedition's paradox — knowledge by unknowledge: civilizations above the contact window cannot be characterized in human terms, yet are pursued anyway. The aggressive-ape projection of invasion fleets after "dollars, diamonds, chocolates" is mocked; what remains is silence and the admission that any conclusion drawn rests on what cannot be observed.</p>
           </details>
@@ -278,7 +327,7 @@
           <span class="card-title">Cartoons</span>
         </div>
         <div class="card-body">
-          <p class="cl-desc">Anthropocentric projection returns as method, openly this time.</p>
+          <p class="cl-desc">Anthropocentric projection returns as method.</p>
           <details class="full"><summary>Full text</summary>
             <p class="full-text">Earlier chapters showed the crew unable to <em>avoid</em> projecting human frames; here they elevate projection to strategy. The paleoethnological constants argument — two sexes, hunting, cave-painting as universal protoculture — is consciously chosen as the only available bridge, with DEUS scripting a myth of battle-then-dance. What was a trap in Birnam Wood becomes the method of last resort: speak in the only language one has, and hope the alien once spoke something like it.</p>
           </details>
@@ -304,7 +353,7 @@
           <span class="card-title">The Quintans</span>
         </div>
         <div class="card-body">
-          <p class="cl-desc">The alien is unrecognizable because it defies human expectations of a "being."</p>
+          <p class="cl-desc">The alien is unrecognizable since it defies human expectations of a "being."</p>
           <details class="full"><summary>Full text</summary>
             <p class="full-text">Tempe walks among the Quintans for hours without knowing it. The mounds register living metabolism on his biosensor, yet he reads them as shelters <em>concealing</em> the Quintans — nothing in his frame allows a "misshapen loaf of bread" to be a person. Nakamura's counsel of "humility" — admitting everything seen may be wholly other than it seems — is exactly the discipline Tempe cannot sustain.</p>
           </details>
@@ -314,7 +363,7 @@
   </section>
 
   <!-- ============================= THREAD B ============================= -->
-  <section class="thread" id="thread-b" style="--rail:var(--thread-b)">
+  <section class="thread" id="thread-b" style="--rail:var(--quintan)">
     <div class="thread-head">
       <h2 class="thread-title">The Silent Universe and the Window of Contact</h2>
     </div>
@@ -343,7 +392,7 @@
           <span class="card-title">Hunting</span>
         </div>
         <div class="card-body">
-          <p class="cl-desc">Development is no single ladder; civilizations fork sideways.</p>
+          <p class="cl-desc">Development is no single ladder.</p>
           <details class="full"><summary>Full text</summary>
             <p class="full-text">The crew dates the older wreck to roughly Earth's late-twentieth-century science, yet the Quintan physics had already deviated — no radioactivity where atomic micropiles belong, as if the chain-reaction stage was skipped entirely. Earth's own technobiotics took a different path; "necroevolution" was deemed unprofitable here, perhaps not there. The Quintans aren't behind or ahead — they're elsewhere.</p>
           </details>
@@ -356,7 +405,7 @@
           <span class="card-title">Show of Strength</span>
         </div>
         <div class="card-body">
-          <p class="cl-desc">The war-sphere: a civilization consumed by its own stalemate.</p>
+          <p class="cl-desc">The war-sphere: a civilisation consumed by its own stalemate.</p>
           <details class="full"><summary>Full text</summary>
             <p class="full-text">The chapter's model of Quinta — jammed radio, viroid warfare, insubordinate autonomous weapons, abandoned megaprojects like the ice ring — depicts conflict as a self-sustaining "artificial organism," a cancer of technology. Strategy now controls the Quintans rather than the reverse; visitors register only as infections to repel. Silence isn't refusal but symptom — the condition later named the war-sphere.</p>
           </details>
@@ -369,7 +418,7 @@
           <span class="card-title">A Cosmic Eschatology</span>
         </div>
         <div class="card-body">
-          <p class="cl-desc">Rival eschatologies for the Silent Universe.</p>
+          <p class="cl-desc">Rival explanations for the Silent Universe.</p>
           <details class="full"><summary>Full text</summary>
             <p class="full-text">Two explanations for cosmic silence are weighed without resolution. <em>Sociolysis</em>: a civilization served by an obedient artificial environment dissolves into a frictionless "Second Stone Age," where no individual would bother broadcasting on a cosmic scale. The <em>cosmological hypothesis</em> (Lauger, Nakamura): civilizations do not perish but pass beyond astronomy into sidereal engineering aimed at purposes a chimpanzee-level mind cannot grasp. Both make silence the normal end state of intelligence.</p>
           </details>
@@ -379,7 +428,7 @@
   </section>
 
   <!-- ============================= THREAD C ============================= -->
-  <section class="thread" id="thread-c" style="--rail:var(--thread-c)">
+  <section class="thread" id="thread-c" style="--rail:var(--amber)">
     <div class="thread-head">
       <h2 class="thread-title">Man, Machine, and the Delegation of Judgment</h2>
     </div>
@@ -395,7 +444,7 @@
           <span class="card-title">Quinta</span>
         </div>
         <div class="card-body">
-          <p class="cl-desc">Machine competence versus biological fragility.</p>
+          <p class="cl-desc">Machine competence versus biological fragility: The men are cargo, not crew .</p>
           <details class="full"><summary>Full text</summary>
             <p class="full-text">The flight is only feasible because the crew are reduced to embryonized near-corpses, blood swapped for onax, contributing nothing while DEUS executes every maneuver flawlessly. The mission's sole failure is organic — Gerbert fails to wake from a loose umbilical clamp, revived by crude kneading. The biological factor remains the weakest link; the men are cargo, not crew.</p>
           </details>
