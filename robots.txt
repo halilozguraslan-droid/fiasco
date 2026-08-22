@@ -1,0 +1,12 @@
+# robots.txt for fiascofiles.org
+# Purpose: tell search engine crawlers that every page on this site may be
+# crawled and indexed, and where to find the sitemap listing those pages.
+# Usage: upload to the site root so it resolves at https://fiascofiles.org/robots.txt
+
+# Crawler rules: apply to every bot (Googlebot, Bingbot, etc.)
+User-agent: *
+# Disallow left empty = nothing is blocked; the whole site is crawlable
+Disallow:
+
+# Absolute URL of the sitemap, so crawlers can discover all pages at once
+Sitemap: https://fiascofiles.org/sitemap.xml

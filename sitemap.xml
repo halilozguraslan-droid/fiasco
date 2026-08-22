@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  sitemap.xml for fiascofiles.org
+  Purpose: lists every public page so Google and other search engines can
+  discover and index the whole site from a single file.
+  Usage: upload to the site root (https://fiascofiles.org/sitemap.xml), then
+  submit that URL in Google Search Console under Indexing > Sitemaps.
+  Maintenance: update <lastmod> whenever a page's content changes, and add a
+  new <url> block for every page added to the site.
+
+  Tag meanings:
+    loc        - the full, absolute URL of the page (required)
+    lastmod    - date the page was last modified, format YYYY-MM-DD
+    changefreq - how often the page is expected to change (a hint, not a rule)
+    priority   - importance of this page relative to others on THIS site,
+                 from 0.0 to 1.0; does not affect ranking against other sites
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Home page: site entry point, highest internal priority -->
+  <url>
+    <loc>https://fiascofiles.org/</loc>
+    <lastmod>2026-08-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Timeline: mission chronology of the Hermes expedition -->
+  <url>
+    <loc>https://fiascofiles.org/timeline.html</loc>
+    <lastmod>2026-08-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Council: the crew's decision-making deliberations -->
+  <url>
+    <loc>https://fiascofiles.org/council.html</loc>
+    <lastmod>2026-08-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- DEUS Log: entries from the ship's computer -->
+  <url>
+    <loc>https://fiascofiles.org/deus.html</loc>
+    <lastmod>2026-08-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Glossary: characters, ships, places, and invented terminology -->
+  <url>
+    <loc>https://fiascofiles.org/glossary.html</loc>
+    <lastmod>2026-08-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Themes: thematic essays and analysis of the novel -->
+  <url>
+    <loc>https://fiascofiles.org/themes.html</loc>
+    <lastmod>2026-08-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+</urlset>
